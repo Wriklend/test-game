@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stellar Bargains - AI Merchant Negotiation</title>
+    <style>
+        /* ===== CSS VARIABLES ===== */
+        :root {
+            --bg-dark: #0a0e27;
+            --bg-darker: #1a0b2e;
+            --bg-card: #1a1f3a;
+            --accent-cyan: #00d9ff;
+            --accent-purple: #a855f7;
+            --text-light: #e2e8f0;
+            --text-muted: #94a3b8;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --border-glow: rgba(0, 217, 255, 0.3);
+        }
+
+        /* ===== GLOBAL STYLES ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--bg-dark), var(--bg-darker));
+            color: var(--text-light);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        #app {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            gap: 20px;
+        }
+
+        /* ===== HEADER ===== */
+        .game-header {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 20px 30px;
+            border: 1px solid var(--border-glow);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .game-header h1 {
+            font-size: 1.8rem;
+            color: var(--accent-cyan);
+            text-shadow: 0 0 10px rgba(0, 217, 255, 0.5);
+        }
+
+        .player-stats {
+            display: flex;
+            gap: 30px;
+            font-size: 1.1rem;
+        }
+
+        .player-stats span {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* ===== MERCHANT PANEL ===== */
+        .merchant-panel {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 25px;
+            border: 1px solid var(--border-glow);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            gap: 25px;
+            align-items: center;
+        }
+
+        .merchant-avatar {
+            font-size: 3rem;
+        }
+
+        .merchant-details h2 {
+            color: var(--accent-cyan);
+            margin-bottom: 8px;
+        }
+
+        .merchant-details p {
+            color: var(--text-muted);
+        }
+
+        .merchant-stats {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            min-width: 200px;
+        }
+
+        .mood-indicator, .trust-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .mood-indicator label, .trust-indicator label {
+            font-weight: 600;
+            min-width: 50px;
+        }
+
+        .meter {
+            width: 150px;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .fill {
+            height: 100%;
+            transition: width 0.5s ease;
+        }
+
+        .mood-indicator .fill {
+            background: linear-gradient(90deg, var(--danger) 0%, var(--warning) 50%, var(--success) 100%);
+        }
+
+        .trust-indicator .fill {
+            background: var(--accent-cyan);
+        }
+
+        .mood-emoji {
+            font-size: 1.5rem;
+        }
+
+        /* ===== GAME CONTROLS ===== */
+        .game-controls {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid var(--border-glow);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .mode-btn {
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            color: white;
+        }
+
+        .mode-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 217, 255, 0.4);
+        }
+
+        .mode-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .action-btn {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-light);
+            border: 1px solid var(--border-glow);
+        }
+
+        .action-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: auto;
+            cursor: pointer;
+        }
+
+        .toggle input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        /* ===== TUTORIAL ===== */
+        .tutorial-panel {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid var(--border-glow);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .toggle-tutorial {
+            width: 100%;
+            background: rgba(168, 85, 247, 0.2);
+            color: var(--accent-purple);
+            border: 1px solid var(--accent-purple);
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .tutorial-content {
+            margin-top: 15px;
+            line-height: 1.6;
+        }
+
+        .tutorial-content h3 {
+            color: var(--accent-cyan);
+            margin-top: 15px;
+            margin-bottom: 8px;
+        }
+
+        .tutorial-content ul {
+            margin-left: 20px;
+        }
+
+        /* ===== ITEM PANEL ===== */
+        .item-panel {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 25px;
+            border: 1px solid var(--border-glow);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .item-card {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .item-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .item-header h2 {
+            color: var(--accent-cyan);
+            font-size: 1.5rem;
+        }
+
+        .badge {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .rarity-common { background: #6b7280; }
+        .rarity-rare { background: #3b82f6; }
+        .rarity-epic { background: #a855f7; }
+
+        .condition-new { background: #10b981; }
+        .condition-used { background: #f59e0b; }
+        .condition-damaged { background: #ef4444; }
+
+        .item-description {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .item-price {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.1rem;
+        }
+
+        .item-price .price {
+            color: var(--accent-cyan);
+            font-weight: 700;
+        }
+
+        /* ===== NEGOTIATION PANEL ===== */
+        .negotiation-panel {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 25px;
+            border: 1px solid var(--border-glow);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .negotiation-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .negotiation-header span {
+            font-weight: 600;
+            color: var(--accent-cyan);
+        }
+
+        .offer-input {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .offer-input label {
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .offer-input input {
+            flex: 1;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border-glow);
+            background: rgba(0, 0, 0, 0.3);
+            color: var(--text-light);
+            font-size: 1rem;
+        }
+
+        .submit-btn {
+            background: var(--accent-cyan);
+            color: var(--bg-dark);
+            padding: 12px 30px;
+            white-space: nowrap;
+        }
+
+        .submit-btn:hover {
+            background: #00b8d9;
+            transform: translateY(-2px);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .negotiation-log {
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .log-entry {
+            padding: 12px 15px;
+            border-radius: 8px;
+            animation: fadeIn 0.3s ease;
+            max-width: 80%;
+        }
+
+        .log-entry.player {
+            background: rgba(168, 85, 247, 0.2);
+            border: 1px solid var(--accent-purple);
+            align-self: flex-end;
+            text-align: right;
+        }
+
+        .log-entry.merchant {
+            background: rgba(0, 217, 255, 0.2);
+            border: 1px solid var(--accent-cyan);
+            align-self: flex-start;
+        }
+
+        .log-entry .speaker {
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .log-entry.player .speaker {
+            color: var(--accent-purple);
+        }
+
+        .log-entry.merchant .speaker {
+            color: var(--accent-cyan);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ===== MODAL ===== */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 30px;
+            border: 2px solid var(--border-glow);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .modal-content h2 {
+            color: var(--accent-cyan);
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+            text-align: center;
+        }
+
+        .deal-details {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 25px;
+            font-size: 1.1rem;
+        }
+
+        .deal-details p {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 6px;
+        }
+
+        .profit-highlight {
+            font-weight: 700;
+            font-size: 1.3rem !important;
+        }
+
+        .profit-positive {
+            color: var(--success);
+        }
+
+        .profit-negative {
+            color: var(--danger);
+        }
+
+        /* ===== HIDDEN ===== */
+        .hidden {
+            display: none !important;
+        }
+
+        /* ===== SCROLLBAR ===== */
+        .negotiation-log::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .negotiation-log::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+        }
+
+        .negotiation-log::-webkit-scrollbar-thumb {
+            background: var(--accent-cyan);
+            border-radius: 4px;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .merchant-panel {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+
+            .game-header {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .player-stats {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .offer-input {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header class="game-header">
+            <h1>⭐ Stellar Bargains</h1>
+            <div class="player-stats">
+                <span class="balance">💰 <strong id="balance">1000</strong> coins</span>
+                <span class="profit">📈 Profit: <strong id="profit">0</strong></span>
+            </div>
+        </header>
+
+        <!-- Merchant Panel -->
+        <section class="merchant-panel">
+            <div class="merchant-avatar">🤖</div>
+            <div class="merchant-details">
+                <h2 id="merchant-name">Merchant Zyx</h2>
+                <p id="merchant-personality">Type: Loading...</p>
+            </div>
+            <div class="merchant-stats">
+                <div class="mood-indicator">
+                    <label>Mood:</label>
+                    <div class="meter">
+                        <div id="mood-fill" class="fill" style="width: 50%"></div>
+                    </div>
+                    <span id="mood-emoji" class="mood-emoji">😐</span>
+                </div>
+                <div class="trust-indicator">
+                    <label>Trust:</label>
+                    <div class="meter">
+                        <div id="trust-fill" class="fill" style="width: 50%"></div>
+                    </div>
+                    <span id="trust-value">50</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Game Controls -->
+        <section class="game-controls">
+            <button id="btn-buy" class="mode-btn">🛒 BUY from Merchant</button>
+            <button id="btn-sell" class="mode-btn">💵 SELL to Merchant</button>
+            <button id="btn-reset" class="action-btn">🔄 Reset Game</button>
+            <label class="toggle">
+                <input type="checkbox" id="hard-mode">
+                <span>⚡ Hard Mode</span>
+            </label>
+        </section>
+
+        <!-- Tutorial Panel -->
+        <section class="tutorial-panel" id="tutorial">
+            <button class="toggle-tutorial" id="toggle-tutorial-btn">❓ How to Play</button>
+            <div class="tutorial-content hidden" id="tutorial-content">
+                <h3>🎯 Objective</h3>
+                <p>Buy items below their fair value and sell items above their fair value to maximize profit. Manage the merchant's mood and build trust to get better deals!</p>
+
+                <h3>🎮 How to Play</h3>
+                <ul>
+                    <li>Choose <strong>BUY</strong> to purchase an item from the merchant, or <strong>SELL</strong> to sell to them</li>
+                    <li>Each negotiation has up to 6 rounds (4 in Hard Mode)</li>
+                    <li>Make offers and negotiate with the merchant</li>
+                    <li>The merchant will ACCEPT, COUNTER, or REJECT your offers</li>
+                </ul>
+
+                <h3>🤖 AI Systems</h3>
+                <ul>
+                    <li><strong>Mood (-100 to +100):</strong> Higher mood = more concessions and friendlier responses. Low mood may cause the merchant to walk away!</li>
+                    <li><strong>Trust (0 to 100):</strong> Bluffing with extreme or erratic offers lowers trust. Low trust makes the merchant more suspicious and aggressive.</li>
+                    <li><strong>Personalities:</strong> Each game features a different merchant type:
+                        <ul>
+                            <li><em>Greedy</em> - High profit margins, slow concessions</li>
+                            <li><em>Honest</em> - Fair prices, accepts reasonable offers</li>
+                            <li><em>Impulsive</em> - Quick concessions but low patience</li>
+                        </ul>
+                    </li>
+                </ul>
+
+                <h3>💡 Strategy Tips</h3>
+                <ul>
+                    <li>Use the Market Estimate as a guide, but it's not always accurate</li>
+                    <li>Don't make extreme lowball offers - they damage trust</li>
+                    <li>Avoid wild price swings between offers</li>
+                    <li>Pay attention to the merchant's mood and adjust your strategy</li>
+                    <li>Build trust over multiple deals for better terms</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Item Display -->
+        <section class="item-panel hidden" id="item-panel">
+            <div class="item-card">
+                <div class="item-header">
+                    <h2 id="item-name">Item Name</h2>
+                    <span id="item-rarity" class="badge">RARITY</span>
+                    <span id="item-condition" class="badge">CONDITION</span>
+                </div>
+                <p id="item-description" class="item-description">Item description</p>
+                <div class="item-price">
+                    <span class="label">💫 Market Estimate:</span>
+                    <span id="item-hint" class="price">~000 coins</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Negotiation Interface -->
+        <section class="negotiation-panel hidden" id="negotiation-panel">
+            <div class="negotiation-header">
+                <span id="mode-indicator">MODE: BUYING</span>
+                <span id="round-indicator">Round: <span id="current-round">1</span> / <span id="max-rounds">6</span></span>
+            </div>
+
+            <div class="offer-input">
+                <label for="player-offer">Your Offer:</label>
+                <input type="number" id="player-offer" placeholder="Enter amount in coins" min="1">
+                <button id="btn-submit-offer" class="submit-btn">Submit Offer</button>
+            </div>
+
+            <div class="negotiation-log" id="negotiation-log">
+                <!-- Dynamic log entries will appear here -->
+            </div>
+        </section>
+
+        <!-- Deal Summary Modal -->
+        <div class="modal hidden" id="deal-modal">
+            <div class="modal-content">
+                <h2 id="deal-result">Deal Result</h2>
+                <div class="deal-details">
+                    <p><span>Final Price:</span> <span id="final-price">0</span> coins</p>
+                    <p><span>Fair Value:</span> <span id="fair-value">0</span> coins</p>
+                    <p class="profit-highlight"><span>Your Profit:</span> <span id="deal-profit">0</span> coins</p>
+                </div>
+                <button id="btn-close-modal" class="action-btn" style="width: 100%;">Continue Trading</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
