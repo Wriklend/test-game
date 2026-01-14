@@ -1,0 +1,29 @@
+{
+  "name": "stellar-bargains",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "An immersive single-player trading game where you negotiate with an AI merchant that has personality, mood, and trust systems. Buy low, sell high, and build relationships to maximize your profit!",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "type-check": "tsc --noEmit"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Wriklend/test-game.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Wriklend/test-game/issues"
+  },
+  "homepage": "https://github.com/Wriklend/test-game#readme",
+  "devDependencies": {
+    "@types/node": "^25.0.7",
+    "dotenv": "^17.2.3",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.1"
+  }
+}

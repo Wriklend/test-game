@@ -4,522 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Stellar Bargains - AI Merchant Negotiation</title>
-    <style>
-        /* ===== CSS VARIABLES ===== */
-        :root {
-            --bg-dark: #0a0e27;
-            --bg-darker: #1a0b2e;
-            --bg-card: #1a1f3a;
-            --accent-cyan: #00d9ff;
-            --accent-purple: #a855f7;
-            --text-light: #e2e8f0;
-            --text-muted: #94a3b8;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --danger: #ef4444;
-            --border-glow: rgba(0, 217, 255, 0.3);
-        }
-
-        /* ===== GLOBAL STYLES ===== */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            background: linear-gradient(135deg, var(--bg-dark), var(--bg-darker));
-            color: var(--text-light);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        #app {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: grid;
-            gap: 20px;
-        }
-
-        /* ===== HEADER ===== */
-        .game-header {
-            background: var(--bg-card);
-            border-radius: 12px;
-            padding: 20px 30px;
-            border: 1px solid var(--border-glow);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .game-header h1 {
-            font-size: 1.8rem;
-            color: var(--accent-cyan);
-            text-shadow: 0 0 10px rgba(0, 217, 255, 0.5);
-        }
-
-        .player-stats {
-            display: flex;
-            gap: 30px;
-            font-size: 1.1rem;
-        }
-
-        .player-stats span {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        /* ===== MERCHANT PANEL ===== */
-        .merchant-panel {
-            background: var(--bg-card);
-            border-radius: 12px;
-            padding: 25px;
-            border: 1px solid var(--border-glow);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-            display: grid;
-            grid-template-columns: auto 1fr auto;
-            gap: 25px;
-            align-items: center;
-        }
-
-        .merchant-avatar {
-            font-size: 3rem;
-        }
-
-        .merchant-details h2 {
-            color: var(--accent-cyan);
-            margin-bottom: 8px;
-        }
-
-        .merchant-details p {
-            color: var(--text-muted);
-        }
-
-        .merchant-stats {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            min-width: 200px;
-        }
-
-        .mood-indicator, .trust-indicator {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .mood-indicator label, .trust-indicator label {
-            font-weight: 600;
-            min-width: 50px;
-        }
-
-        .meter {
-            width: 150px;
-            height: 20px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            overflow: hidden;
-            position: relative;
-        }
-
-        .fill {
-            height: 100%;
-            transition: width 0.5s ease;
-        }
-
-        .mood-indicator .fill {
-            background: linear-gradient(90deg, var(--danger) 0%, var(--warning) 50%, var(--success) 100%);
-        }
-
-        .trust-indicator .fill {
-            background: var(--accent-cyan);
-        }
-
-        .mood-emoji {
-            font-size: 1.5rem;
-        }
-
-        /* ===== GAME CONTROLS ===== */
-        .game-controls {
-            background: var(--bg-card);
-            border-radius: 12px;
-            padding: 20px;
-            border: 1px solid var(--border-glow);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-            display: flex;
-            gap: 15px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        button {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .mode-btn {
-            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
-            color: white;
-        }
-
-        .mode-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 217, 255, 0.4);
-        }
-
-        .mode-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .action-btn {
-            background: rgba(255, 255, 255, 0.1);
-            color: var(--text-light);
-            border: 1px solid var(--border-glow);
-        }
-
-        .action-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
-
-        .toggle {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-left: auto;
-            cursor: pointer;
-        }
-
-        .toggle input[type="checkbox"] {
-            width: 20px;
-            height: 20px;
-            cursor: pointer;
-        }
-
-        /* ===== TUTORIAL ===== */
-        .tutorial-panel {
-            background: var(--bg-card);
-            border-radius: 12px;
-            padding: 20px;
-            border: 1px solid var(--border-glow);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-        }
-
-        .toggle-tutorial {
-            width: 100%;
-            background: rgba(168, 85, 247, 0.2);
-            color: var(--accent-purple);
-            border: 1px solid var(--accent-purple);
-            padding: 12px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-        }
-
-        .tutorial-content {
-            margin-top: 15px;
-            line-height: 1.6;
-        }
-
-        .tutorial-content h3 {
-            color: var(--accent-cyan);
-            margin-top: 15px;
-            margin-bottom: 8px;
-        }
-
-        .tutorial-content ul {
-            margin-left: 20px;
-        }
-
-        /* ===== ITEM PANEL ===== */
-        .item-panel {
-            background: var(--bg-card);
-            border-radius: 12px;
-            padding: 25px;
-            border: 1px solid var(--border-glow);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-        }
-
-        .item-card {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .item-header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-
-        .item-header h2 {
-            color: var(--accent-cyan);
-            font-size: 1.5rem;
-        }
-
-        .badge {
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 0.75rem;
-            font-weight: 700;
-            text-transform: uppercase;
-        }
-
-        .rarity-common { background: #6b7280; }
-        .rarity-rare { background: #3b82f6; }
-        .rarity-epic { background: #a855f7; }
-
-        .condition-new { background: #10b981; }
-        .condition-used { background: #f59e0b; }
-        .condition-damaged { background: #ef4444; }
-
-        .item-description {
-            color: var(--text-muted);
-            font-size: 0.95rem;
-        }
-
-        .item-price {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 1.1rem;
-        }
-
-        .item-price .price {
-            color: var(--accent-cyan);
-            font-weight: 700;
-        }
-
-        /* ===== NEGOTIATION PANEL ===== */
-        .negotiation-panel {
-            background: var(--bg-card);
-            border-radius: 12px;
-            padding: 25px;
-            border: 1px solid var(--border-glow);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-        }
-
-        .negotiation-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .negotiation-header span {
-            font-weight: 600;
-            color: var(--accent-cyan);
-        }
-
-        .offer-input {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .offer-input label {
-            font-weight: 600;
-            white-space: nowrap;
-        }
-
-        .offer-input input {
-            flex: 1;
-            padding: 12px;
-            border-radius: 8px;
-            border: 1px solid var(--border-glow);
-            background: rgba(0, 0, 0, 0.3);
-            color: var(--text-light);
-            font-size: 1rem;
-        }
-
-        .submit-btn {
-            background: var(--accent-cyan);
-            color: var(--bg-dark);
-            padding: 12px 30px;
-            white-space: nowrap;
-        }
-
-        .submit-btn:hover {
-            background: #00b8d9;
-            transform: translateY(-2px);
-        }
-
-        .submit-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .negotiation-log {
-            max-height: 400px;
-            overflow-y: auto;
-            padding: 15px;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 8px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .log-entry {
-            padding: 12px 15px;
-            border-radius: 8px;
-            animation: fadeIn 0.3s ease;
-            max-width: 80%;
-        }
-
-        .log-entry.player {
-            background: rgba(168, 85, 247, 0.2);
-            border: 1px solid var(--accent-purple);
-            align-self: flex-end;
-            text-align: right;
-        }
-
-        .log-entry.merchant {
-            background: rgba(0, 217, 255, 0.2);
-            border: 1px solid var(--accent-cyan);
-            align-self: flex-start;
-        }
-
-        .log-entry .speaker {
-            font-weight: 700;
-            margin-bottom: 5px;
-        }
-
-        .log-entry.player .speaker {
-            color: var(--accent-purple);
-        }
-
-        .log-entry.merchant .speaker {
-            color: var(--accent-cyan);
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* ===== MODAL ===== */
-        .modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-
-        .modal-content {
-            background: var(--bg-card);
-            border-radius: 12px;
-            padding: 30px;
-            border: 2px solid var(--border-glow);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-            max-width: 500px;
-            width: 90%;
-        }
-
-        .modal-content h2 {
-            color: var(--accent-cyan);
-            margin-bottom: 20px;
-            font-size: 1.8rem;
-            text-align: center;
-        }
-
-        .deal-details {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            margin-bottom: 25px;
-            font-size: 1.1rem;
-        }
-
-        .deal-details p {
-            display: flex;
-            justify-content: space-between;
-            padding: 10px;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 6px;
-        }
-
-        .profit-highlight {
-            font-weight: 700;
-            font-size: 1.3rem !important;
-        }
-
-        .profit-positive {
-            color: var(--success);
-        }
-
-        .profit-negative {
-            color: var(--danger);
-        }
-
-        /* ===== HIDDEN ===== */
-        .hidden {
-            display: none !important;
-        }
-
-        /* ===== SCROLLBAR ===== */
-        .negotiation-log::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        .negotiation-log::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 4px;
-        }
-
-        .negotiation-log::-webkit-scrollbar-thumb {
-            background: var(--accent-cyan);
-            border-radius: 4px;
-        }
-
-        /* ===== RESPONSIVE ===== */
-        @media (max-width: 768px) {
-            .merchant-panel {
-                grid-template-columns: 1fr;
-                text-align: center;
-            }
-
-            .game-header {
-                flex-direction: column;
-                gap: 15px;
-            }
-
-            .player-stats {
-                flex-direction: column;
-                gap: 10px;
-            }
-
-            .offer-input {
-                flex-direction: column;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="/src/styles/main.css">
 </head>
 <body>
     <div id="app">
@@ -531,6 +16,20 @@
                 <span class="profit">📈 Profit: <strong id="profit">0</strong></span>
             </div>
         </header>
+
+        <!-- Player Panel -->
+        <section class="player-panel">
+            <div class="player-avatar" id="player-avatar">👤</div>
+            <div class="player-details">
+                <h2 id="player-name">Generating...</h2>
+                <p id="player-info">Species: Loading... | Profession: Loading...</p>
+                <p id="player-backstory" class="backstory">Loading backstory...</p>
+            </div>
+            <div class="player-traits">
+                <span class="trait" id="player-ability" title="Special Ability">⚡ Loading...</span>
+                <span class="trait weakness" id="player-weakness" title="Weakness">⚠️ Loading...</span>
+            </div>
+        </section>
 
         <!-- Merchant Panel -->
         <section class="merchant-panel">
@@ -564,8 +63,45 @@
             <button id="btn-reset" class="action-btn">🔄 Reset Game</button>
             <label class="toggle">
                 <input type="checkbox" id="hard-mode">
-                <span>⚡ Hard Mode</span>
+                <span>⚡ Hard Mode (4 rounds instead of 6)</span>
             </label>
+        </section>
+
+        <!-- Claude Settings Panel -->
+        <section class="tutorial-panel" id="claude-settings">
+            <button class="toggle-tutorial" id="toggle-claude-btn">⚙️ About This Game</button>
+            <div class="tutorial-content hidden" id="claude-content">
+                <h3>🤖 AI-Powered Game</h3>
+                <p><strong>This game is powered by Claude AI.</strong> All merchant personalities, negotiation decisions, and dialogue are generated by Claude in real-time.</p>
+
+                <div id="api-status" style="padding: 10px; border-radius: 6px; background: rgba(0,0,0,0.3); font-size: 0.9rem; margin: 15px 0;">
+                    Status: <span id="api-status-text" style="color: var(--warning);">Checking...</span>
+                </div>
+
+                <h3>Setup (Dev Mode)</h3>
+                <ol style="line-height: 1.8;">
+                    <li>Get your API key from <a href="https://console.anthropic.com/" target="_blank" style="color: var(--accent-cyan);">console.anthropic.com</a></li>
+                    <li>Add it to <code>.env</code> file: <code>CLAUDE_API_KEY=your-key-here</code></li>
+                    <li>Restart the dev server: <code>npm run dev</code></li>
+                </ol>
+
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 10px;">
+                    Note: The API key is stored server-side in <code>.env</code> file (never exposed to browser).
+                </p>
+
+                <h3 style="margin-top: 20px;">How It Works</h3>
+                <ul>
+                    <li><strong>Unique Merchants:</strong> Each merchant is uniquely generated with backstory, quirks, and personality</li>
+                    <li><strong>Real AI Decisions:</strong> Claude AI decides whether to accept, counter, or reject your offers</li>
+                    <li><strong>Dynamic Dialogue:</strong> All merchant responses are generated in real-time based on context</li>
+                    <li><strong>Adaptive Behavior:</strong> The AI tracks mood, trust, and offer history to make realistic decisions</li>
+                    <li><strong>Infinite Variety:</strong> Every merchant and negotiation is unique</li>
+                </ul>
+
+                <p style="margin-top: 15px; font-size: 0.85rem; color: var(--text-muted);">
+                    Note: API calls cost a small amount per request (~$0.01-0.02 per negotiation). Your API key is stored locally in your browser.
+                </p>
+            </div>
         </section>
 
         <!-- Tutorial Panel -->
@@ -643,18 +179,50 @@
 
         <!-- Deal Summary Modal -->
         <div class="modal hidden" id="deal-modal">
-            <div class="modal-content">
+            <div class="modal-content deal-summary">
+                <div class="deal-icon" id="deal-icon">✅</div>
                 <h2 id="deal-result">Deal Result</h2>
-                <div class="deal-details">
-                    <p><span>Final Price:</span> <span id="final-price">0</span> coins</p>
-                    <p><span>Fair Value:</span> <span id="fair-value">0</span> coins</p>
-                    <p class="profit-highlight"><span>Your Profit:</span> <span id="deal-profit">0</span> coins</p>
+                <p class="deal-mode" id="deal-mode">You bought an item</p>
+
+                <div class="deal-item-info">
+                    <span class="deal-item-name" id="deal-item-name">Item Name</span>
                 </div>
-                <button id="btn-close-modal" class="action-btn" style="width: 100%;">Continue Trading</button>
+
+                <div class="deal-breakdown">
+                    <div class="deal-row">
+                        <span class="deal-label">Your Price</span>
+                        <span class="deal-value" id="final-price">0</span>
+                    </div>
+                    <div class="deal-row">
+                        <span class="deal-label">Market Value</span>
+                        <span class="deal-value muted" id="fair-value">0</span>
+                    </div>
+                    <div class="deal-divider"></div>
+                    <div class="deal-row profit-row">
+                        <span class="deal-label" id="profit-label">You Saved</span>
+                        <span class="deal-value" id="deal-profit">0</span>
+                    </div>
+                </div>
+
+                <div class="deal-verdict" id="deal-verdict">
+                    <span class="verdict-emoji">🎉</span>
+                    <span class="verdict-text">Great deal!</span>
+                </div>
+
+                <button id="btn-close-modal" class="action-btn" style="width: 100%;">Next Merchant</button>
+            </div>
+        </div>
+
+        <!-- Loading Overlay -->
+        <div class="loading-overlay" id="loading-overlay">
+            <div class="loading-content">
+                <div class="loading-spinner"></div>
+                <h2 id="loading-title">Initializing Game</h2>
+                <p id="loading-message">Generating your character...</p>
             </div>
         </div>
     </div>
 
-    <script src="game.js"></script>
+    <script type="module" src="/src/main.ts"></script>
 </body>
 </html>

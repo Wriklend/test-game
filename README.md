@@ -1,262 +1,310 @@
-# ⭐ Stellar Bargains: AI Merchant Negotiation Game
+# ⭐ Stellar Bargains - AI Merchant Negotiation Game
 
-An immersive single-player trading game where you negotiate with an AI merchant that has personality, mood, and trust systems. Buy low, sell high, and build relationships to maximize your profit!
+A sci-fi trading game **fully powered by Claude AI**. Negotiate with AI-generated alien merchants, each with unique personalities, backstories, and negotiation styles. Every decision—accept, counter, reject—is made by Claude in real-time.
 
-## 🎮 Features
+## 🤖 AI-Powered Features
 
-- **Dynamic AI Merchant** with 3 distinct personalities (Greedy, Honest, Impulsive)
-- **Mood System** (-100 to +100) that affects negotiation behavior
-- **Trust System** (0-100) that responds to bluffing and fair dealing
-- **Bluff Detection** - extreme or erratic offers damage trust
-- **30+ Sci-Fi Items** across 4 categories (Weapons, Tech, Artifacts, Consumables)
-- **Rarity & Condition** modifiers affecting prices
-- **Market Hints** with intentional inaccuracy for strategic depth
-- **Hard Mode** - 4 rounds instead of 6 for increased difficulty
-- **No external dependencies** - pure TypeScript/JavaScript game
+- **AI-Generated Merchants**: Every merchant is uniquely created by Claude with backstory, quirks, catchphrases, and personality
+- **Real AI Decisions**: Claude AI decides whether to accept, counter, or reject your offers based on full negotiation context
+- **Dynamic Dialogue**: All merchant responses are generated in real-time by Claude
+- **Adaptive Behavior**: The AI tracks mood, trust, and offer history to make realistic, contextual decisions
+- **Infinite Variety**: Every merchant and negotiation is completely unique
 
-## 📦 Installation & Compilation
+## 🛠️ Tech Stack
 
-### Prerequisites
+- **Frontend**: TypeScript + Vite
+- **AI**: Claude API (Sonnet 4.5)
+- **Architecture**: Modular ES6 with path aliases
+- **Dev Proxy**: Vite middleware for API security
+- **Styling**: Vanilla CSS with CSS variables
 
-Install TypeScript compiler if you haven't already:
+## 🚀 Quick Start
+
+### 1. Install Dependencies
 
 ```bash
-npm install -g typescript
+npm install
 ```
 
-### Compilation Steps
+### 2. Configure Claude API Key
 
-1. **Navigate to the project directory:**
-   ```bash
-   cd /Users/alexmushegov/Documents/projects/Torgash
-   ```
+Create a `.env` file in the root directory:
 
-2. **Compile TypeScript to JavaScript:**
-   ```bash
-   tsc game.ts
-   ```
+```bash
+cp .env.example .env
+```
 
-   This will generate `game.js` in the same directory.
+Edit `.env` and add your Claude API key:
 
-3. **Open the game:**
-   Simply open `index.html` in any modern web browser:
-   ```bash
-   open index.html
-   ```
+```env
+CLAUDE_API_KEY=sk-ant-your-api-key-here
+```
 
-   Or manually open the file in Chrome, Firefox, Safari, or Edge.
+**Get your API key:** https://console.anthropic.com/
 
-## 🎯 How to Play
+⚠️ **Important**: The API key is stored server-side and **never exposed to the browser**.
+
+### 3. Run Development Server
+
+```bash
+npm run dev
+```
+
+The game will open at http://localhost:3000/
+
+## 📦 Available Scripts
+
+- `npm run dev` - Start dev server with HMR (Hot Module Replacement)
+- `npm run build` - Build for production (TypeScript → Vite bundle)
+- `npm run preview` - Preview production build locally
+- `npm run type-check` - Check TypeScript types without building
+
+## 🎮 How to Play
 
 ### Objective
-Maximize profit by buying items below their fair value and selling items above their fair value. Manage the merchant's mood and build trust for better deals!
+Maximize profit by buying items below their fair value and selling items above their fair value. The AI merchant tracks mood and trust to create realistic negotiations.
 
 ### Game Flow
 
-1. **Choose Mode:**
-   - Click "BUY from Merchant" to purchase an item
-   - Click "SELL to Merchant" to sell an item
+1. **Start Negotiation:**
+   - Click "🛒 BUY from Merchant" to purchase an item
+   - Click "💵 SELL to Merchant" to sell an item
 
-2. **Negotiate:**
+2. **Make Offers:**
    - Each negotiation has up to 6 rounds (4 in Hard Mode)
    - Enter your offer in coins
-   - The merchant will ACCEPT, COUNTER, or REJECT your offer
+   - Claude AI decides: ACCEPT, COUNTER, or REJECT
 
-3. **Close the Deal:**
-   - Successfully negotiate to complete the trade
-   - Your profit is the difference between the fair price and final price
+3. **AI Decision Factors:**
+   - **Fair Price**: The actual market value (hidden from you)
+   - **Market Hint**: Rough estimate shown to you (±15-30% noise)
+   - **Mood**: Ranges from -100 (angry) to +100 (happy)
+   - **Trust**: Ranges from 0 (suspicious) to 100 (trusting)
+   - **Offer History**: AI remembers all previous offers
+   - **Round Pressure**: AI gets more desperate as rounds progress
 
-4. **Repeat:**
-   - Continue trading to build your balance and profit score
-
-### AI Systems Explained
-
-#### Mood System
-- **Range:** -100 (furious) to +100 (delighted)
-- **Effects:**
-  - Higher mood = more generous counteroffers and warmer messages
-  - Lower mood = fewer concessions and may walk away early
-- **Influenced by:** Offer quality, successful deals, negotiation progress
-
-#### Trust System
-- **Range:** 0 (no trust) to 100 (complete trust)
-- **Effects:**
-  - High trust = larger concessions and better terms
-  - Low trust = merchant becomes suspicious and aggressive
-- **Damaged by:** Bluffing (extreme offers, wild price swings)
-- **Improved by:** Fair dealing, reasonable offers, successful trades
-
-#### Personality Types
-
-**Greedy Merchant**
-- Target margin: 40% profit
-- Patience: 6 rounds
-- Behavior: High asking prices, slow concessions (3% per round)
-- Best strategy: Be patient, gradually improve offers
-
-**Honest Merchant**
-- Target margin: 15% profit
-- Patience: 5 rounds
-- Behavior: Fair prices, accepts reasonable offers quickly (7% concessions)
-- Best strategy: Offer close to estimated value, build trust
-
-**Impulsive Merchant**
-- Target margin: 25% profit
-- Patience: 3 rounds (gets impatient!)
-- Behavior: Quick large concessions (12%), emotional responses
-- Best strategy: Act fast, be bold but not too aggressive
+4. **Complete the Deal:**
+   - If AI accepts, the trade is completed
+   - Your profit = Fair Price - Final Price (when buying)
+   - Your profit = Final Price - Fair Price (when selling)
 
 ### Strategy Tips
 
-1. **Use the Market Estimate** - It's not perfect, but it's a good starting point (±15-30% noise)
-2. **Avoid Lowballing** - Offers below 40% of fair value (or above 160% when selling) damage trust
-3. **Be Consistent** - Wild price swings (>30% between offers) trigger bluff detection
-4. **Watch the Mood** - Adjust your strategy based on the merchant's emotional state
-5. **Build Trust** - Fair dealing in one negotiation improves terms in future deals
-6. **Round Pressure** - Merchant becomes more flexible in later rounds
+1. **Use the Market Estimate** - It's intentionally noisy, but a good starting point
+2. **Avoid Lowballing** - Extreme offers damage trust and anger the merchant
+3. **Be Consistent** - Wild price swings make the AI suspicious
+4. **Watch Mood & Trust** - The AI reacts realistically to your behavior
+5. **Round Pressure Works** - AI becomes more flexible in later rounds
+6. **Every Merchant is Different** - Claude generates unique personalities each time
 
-## 🎨 Game Interface
-
-### UI Elements
-
-- **Balance Display** - Your available coins
-- **Profit Tracker** - Total profit across all deals
-- **Merchant Panel** - Shows personality, mood meter, and trust meter
-- **Item Card** - Displays item details, rarity, condition, and market estimate
-- **Negotiation Log** - Chat-style history of offers and responses
-- **Round Counter** - Tracks negotiation progress
-- **Deal Summary** - Shows final price, fair value, and your profit
-
-### Visual Indicators
-
-- **Mood Emoji:** 😊 (happy) → 🙂 → 😐 (neutral) → 😒 → 😠 (angry)
-- **Mood Bar:** Color gradient from red (bad) to green (good)
-- **Trust Bar:** Cyan progress bar showing trust percentage
-- **Rarity Badges:** Common (gray), Rare (blue), Epic (purple)
-- **Condition Badges:** New (green), Used (orange), Damaged (red)
-
-## 🔧 Game Mechanics
-
-### Price Calculation
+## 🏗️ Project Structure
 
 ```
-Fair Price = Base Price × Rarity Multiplier × Condition Multiplier
-
-Rarity Multipliers:
-- Common: 1.0x
-- Rare: 2.5x
-- Epic: 5.0x
-
-Condition Multipliers:
-- New: 1.0x
-- Used: 0.7x
-- Damaged: 0.4x
+src/
+├── main.ts                     # Entry point with HMR support
+├── types/
+│   ├── enums.ts               # Rarity, Condition, ItemCategory
+│   ├── types.ts               # NegotiationMode, NegotiationAction
+│   ├── interfaces.ts          # All interfaces (NegotiationContext, ClaudeNegotiationResponse, etc.)
+│   └── index.ts               # Barrel export
+├── data/
+│   └── itemTemplates.ts       # 32 sci-fi items (weapons, tech, artifacts, consumables)
+├── models/
+│   ├── Item.ts                # Item model with price calculation
+│   ├── PersonalityProfile.ts  # Merchant personality container
+│   ├── Merchant.ts            # Merchant with mood/trust tracking
+│   └── ItemGenerator.ts       # Random item generation
+├── integrations/
+│   └── claude.ts              # Claude API integration (proxy mode)
+├── ui/
+│   └── UIController.ts        # DOM manipulation & event handling
+├── game/
+│   └── Game.ts                # Main game orchestrator
+└── styles/
+    └── main.css               # All CSS styling
 ```
 
-### Acceptable Range Formula
+## 🔌 How the AI Integration Works
 
-The merchant calculates an acceptable price range based on:
-- **Target Margin:** Personality-based profit goal (15-40%)
-- **Mood Modifier:** ±20% adjustment based on mood
-- **Trust Modifier:** ±15% adjustment based on trust
-- **Round Pressure:** +30% flexibility as rounds progress
+### Architecture
 
-### Bluff Detection Algorithm
-
-**Triggers:**
-- 2+ extreme offers (< 40% fair price when buying, > 160% when selling)
-- 3+ oscillations (> 30% swings between consecutive offers)
-
-**Consequence:**
 ```
-Trust Loss = 10 × Personality's Bluff Sensitivity
+Browser → Vite Dev Server → Claude API
+          (proxy /api/claude)
 ```
+
+1. **Browser** makes POST request to `/api/claude`
+2. **Vite Middleware** (see `vite.config.ts`) intercepts the request
+3. **Proxy** adds API key from `.env` and forwards to Claude API
+4. **Claude API** processes the request (personality generation or negotiation decision)
+5. **Response** flows back to browser with AI-generated content
+
+### API Security
+
+- ✅ API key stored in `.env` file (server-side only)
+- ✅ Never exposed to browser JavaScript
+- ✅ `.env` is in `.gitignore` (never committed)
+- ✅ Proxy validates requests before forwarding
+
+### API Usage & Cost
+
+Each game session makes approximately:
+- **1 call** to generate merchant personality (~1000 tokens)
+- **1-6 calls** per negotiation (~500 tokens each)
+
+**Estimated cost**: ~$0.01-0.02 per negotiation with Claude Sonnet 4.5
+
+## 🎯 What's Different from Original?
+
+### Before (Deterministic Logic)
+- 3 static personality types (Greedy, Honest, Impulsive)
+- Rule-based negotiation engine with formulas
+- Template-based message generation
+- Bluff detection with hardcoded thresholds
+- Predictable behavior
+
+### Now (AI-Powered)
+- ♾️ Infinite unique merchants generated by Claude
+- 🤖 All decisions made by AI based on context
+- 💬 Real-time dialogue generation
+- 🧠 Adaptive behavior that feels human-like
+- 🎭 Every negotiation is unique
+
+### Architecture Changes
+- ❌ Removed: `src/ai/` folder (BluffDetector, NegotiationEngine, MessageGenerator)
+- ❌ Removed: Message templates
+- ✅ Added: Vite proxy middleware
+- ✅ Added: Full Claude API integration
+- ✅ Simplified: Game orchestrator
 
 ## 📊 Items Database
 
-The game includes 32 unique items:
+The game includes **32 unique items** across 4 categories:
 
 ### Weapons (8)
-- Plasma Rifle, Neural Disruptor, Mono-Blade, Gravity Hammer, Arc Pistol, Photon Lance, Sonic Stunner, Nano-Swarm Grenade
+Plasma Rifle, Neural Disruptor, Mono-Blade, Gravity Hammer, Arc Pistol, Photon Lance, Sonic Stunner, Nano-Swarm Grenade
 
 ### Tech (10)
-- Quantum Processor, Holo-Projector, Neural Interface, Fusion Cell, Stealth Field Generator, Gravity Boots, Translator Implant, Repair Nanites, Data Spike, Bio-Scanner
+Quantum Processor, Holo-Projector, Neural Interface, Fusion Cell, Stealth Field Generator, Gravity Boots, Translator Implant, Repair Nanites, Data Spike, Bio-Scanner
 
 ### Artifacts (7)
-- Precursor Orb, Psionic Crystal, Time Shard, Void Stone, Star Chart, Memory Crystal, Harmonic Resonator
+Precursor Orb, Psionic Crystal, Time Shard, Void Stone, Star Chart, Memory Crystal, Harmonic Resonator
 
 ### Consumables (7)
-- Stim Pack, Ration Bar, Anti-Radiation Serum, Oxygen Canister, Boost Injectable, Mind Shield Pill, Cryo Capsule
+Stim Pack, Ration Bar, Anti-Radiation Serum, Oxygen Canister, Boost Injectable, Mind Shield Pill, Cryo Capsule
 
-## 🚀 Development
+## 🚢 Production Deployment
 
-### Project Structure
+⚠️ **Important**: The current setup uses Vite dev server proxy which **only works in development**.
 
+For production, you need to create a proper backend:
+
+### Option 1: Express Backend
+
+```javascript
+// server.js
+const express = require('express');
+require('dotenv').config();
+
+const app = express();
+app.use(express.json());
+app.use(express.static('dist'));
+
+app.post('/api/claude', async (req, res) => {
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': process.env.CLAUDE_API_KEY,
+      'anthropic-version': '2023-06-01'
+    },
+    body: JSON.stringify(req.body)
+  });
+
+  const data = await response.json();
+  res.json(data);
+});
+
+app.listen(3000);
 ```
-Torgash/
-├── index.html       # Game HTML structure and CSS
-├── game.ts          # TypeScript source code (edit this)
-├── game.js          # Compiled JavaScript (generated by tsc)
-└── README.md        # This file
+
+### Option 2: Serverless Functions
+
+Deploy to Vercel/Netlify with serverless functions:
+
+```javascript
+// api/claude.js (Vercel) or netlify/functions/claude.js
+export default async function handler(req, res) {
+  // Same logic as above
+}
 ```
 
-### Making Changes
+### Deployment Steps
 
-1. Edit `game.ts` with your changes
-2. Recompile: `tsc game.ts`
-3. Refresh `index.html` in your browser
-
-### Architecture Overview
-
-```
-Game (main orchestrator)
-├── ItemGenerator → generates Item objects
-├── Merchant (personality, mood, trust)
-│   └── PersonalityProfile (traits)
-├── NegotiationSession (manages current deal)
-│   ├── NegotiationEngine (evaluation logic)
-│   └── BluffDetector (tracks suspicious offers)
-├── MessageGenerator (contextual merchant responses)
-└── UIController (DOM updates, event handling)
-```
-
-## 🎲 Game Balance
-
-- **Starting Balance:** 1000 coins (allows 7-20 deals depending on item prices)
-- **Negotiation Rounds:** 6 normal, 4 hard mode
-- **Item Distribution:** 60% common, 30% rare, 10% epic
-- **Condition Distribution:** 50% new, 30% used, 20% damaged
-- **Market Hint Noise:** ±15-30% of fair price
+1. Build frontend: `npm run build`
+2. Deploy `dist/` folder to CDN/static hosting
+3. Deploy backend API to server/serverless
+4. Update `src/integrations/claude.ts` to point to production API URL
 
 ## 🐛 Troubleshooting
 
-**Game won't load:**
-- Ensure `game.js` exists (compile `game.ts` with `tsc`)
-- Check browser console for errors (F12)
-- Try opening in a different browser
+### "CLAUDE_API_KEY not configured"
+- Make sure `.env` file exists in root directory
+- Check that `CLAUDE_API_KEY=sk-ant-...` is set correctly
+- Restart dev server after changing `.env`
 
-**TypeScript compilation errors:**
-- Update TypeScript: `npm install -g typescript@latest`
-- Check for syntax errors in `game.ts`
-- Ensure `--target ES2015` and `--lib ES2015,DOM` are compatible with your tsc version
+### "API error 400" or CORS error
+- This happens when trying to call Claude API directly from browser
+- Solution is already implemented: use the Vite proxy
+- Make sure you're running `npm run dev` (not just opening HTML)
 
-**Negotiation seems unfair:**
-- Remember the market hint has intentional noise (±15-30%)
-- Each personality has different acceptable ranges
-- Mood and trust significantly affect terms
-- Try the tutorial for strategy tips
+### TypeScript errors
+```bash
+npm run type-check  # See all type errors
+```
 
-## 📝 Credits
+### Build fails
+```bash
+rm -rf node_modules dist
+npm install
+npm run build
+```
 
-**Game Design & Implementation:** AI Merchant Negotiation Game
-**Engine:** Pure TypeScript/JavaScript (no frameworks)
-**Theme:** Sci-Fi Marketplace
-**AI Model:** Multi-factor negotiation system with personality, mood, and trust
+## 📝 Development Notes
 
-## 🎉 Enjoy!
+### HMR (Hot Module Replacement)
+- Player balance/profit persists across hot reloads
+- State saved to `localStorage` during HMR
+- Automatically restored on reload
 
-Good luck in your negotiations, trader! May your profits be high and your trust remain strong.
+### Path Aliases
+```typescript
+import { Game } from '@game/Game';
+import { Item } from '@models/Item';
+import { claudeIntegration } from '@integrations/claude';
+```
+
+Configured in both `tsconfig.json` and `vite.config.ts`.
+
+### Strict TypeScript
+- All strict mode flags enabled
+- No implicit `any`
+- Full type safety across codebase
+
+## 🎉 Credits
+
+**Game Design**: AI Merchant Negotiation
+**AI Model**: Claude Sonnet 4.5 by Anthropic
+**Engine**: TypeScript + Vite
+**Theme**: Sci-Fi Marketplace
+**Architecture**: Modular ES6 with AI-first design
+
+Built with Claude Code assistance.
+
+## 📄 License
+
+MIT
 
 ---
 
-**Pro Tip:** Try different strategies with each personality type. What works with an Honest merchant won't work with an Impulsive one!
+**Pro Tip**: Every merchant is unique! Try different strategies and see how Claude adapts to your negotiation style. 🚀
