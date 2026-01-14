@@ -1,6 +1,6 @@
 // ===== ITEM CLASS =====
 
-import { ItemCategory, Rarity, Condition } from '../types/enums';
+import { ItemCategory, Rarity, Condition, WearableSlot } from '../types/enums';
 import type { ItemTemplate } from '../types/interfaces';
 
 /**
@@ -14,6 +14,9 @@ export class Item {
     condition: Condition;
     fairPrice: number;      // Hidden from player
     marketHint: number;     // Shown to player (inaccurate)
+    slot?: WearableSlot;    // For wearable items
+    moodBonus?: number;     // Mood boost when equipped
+    isEquipped: boolean;    // Whether item is currently equipped
 
     constructor(template: ItemTemplate, rarity: Rarity, condition: Condition) {
         this.name = template.name;
@@ -23,6 +26,9 @@ export class Item {
         this.condition = condition;
         this.fairPrice = this.calculateFairPrice(template.basePrice);
         this.marketHint = this.generateMarketHint();
+        this.slot = template.slot;
+        this.moodBonus = template.moodBonus;
+        this.isEquipped = false;
     }
 
     /**

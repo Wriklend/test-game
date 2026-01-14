@@ -14,8 +14,13 @@
             <div class="player-stats">
                 <span class="balance">💰 <strong id="balance">1000</strong> coins</span>
                 <span class="profit">📈 Profit: <strong id="profit">0</strong></span>
+                <span class="score">🏆 Score: <strong id="score">0</strong></span>
             </div>
+            <button id="btn-menu" class="menu-btn" title="Menu">☰</button>
         </header>
+
+        <!-- Save Indicator -->
+        <div id="save-indicator" class="save-indicator">💾 Game Saved</div>
 
         <!-- Player Panel -->
         <section class="player-panel">
@@ -68,11 +73,7 @@
         <section class="game-controls">
             <button id="btn-buy" class="mode-btn">🛒 BUY from Merchant</button>
             <button id="btn-sell" class="mode-btn">💵 SELL to Merchant</button>
-            <button id="btn-reset" class="action-btn">🔄 Reset Game</button>
-            <label class="toggle">
-                <input type="checkbox" id="hard-mode">
-                <span>⚡ Hard Mode (4 rounds instead of 6)</span>
-            </label>
+            <button id="btn-shop" class="shop-btn">🏪 Visit Shop</button>
         </section>
 
         <!-- Claude Settings Panel -->
@@ -222,6 +223,100 @@
                 </div>
 
                 <button id="btn-close-modal" class="action-btn" style="width: 100%;">Next Merchant</button>
+            </div>
+        </div>
+
+        <!-- Leaderboard Modal -->
+        <div class="modal hidden" id="leaderboard-modal">
+            <div class="modal-content leaderboard-content">
+                <h2>🏆 Leaderboard</h2>
+                <p class="leaderboard-subtitle">Top 10 Traders</p>
+
+                <div class="leaderboard-list" id="leaderboard-list">
+                    <!-- Dynamically populated -->
+                </div>
+
+                <div class="leaderboard-actions">
+                    <button id="btn-submit-score" class="action-btn">📝 Submit Score</button>
+                    <button id="btn-close-leaderboard" class="action-btn">Close</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Player Name Input Modal -->
+        <div class="modal hidden" id="player-name-modal">
+            <div class="modal-content player-name-content">
+                <h2>Enter Your Name</h2>
+                <p>Submit your score to the leaderboard!</p>
+
+                <input type="text" id="player-name-input" placeholder="Enter your name" maxlength="20" />
+
+                <div class="modal-actions">
+                    <button id="submit-player-name" class="action-btn">Submit</button>
+                    <button id="cancel-player-name" class="action-btn secondary">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Menu Modal -->
+        <div class="modal hidden" id="menu-modal">
+            <div class="modal-content menu-content">
+                <h2>⚙️ Menu</h2>
+
+                <div class="menu-options">
+                    <button id="btn-save" class="menu-option-btn">
+                        <span class="menu-icon">💾</span>
+                        <span class="menu-label">Save Game</span>
+                    </button>
+
+                    <button id="btn-load" class="menu-option-btn">
+                        <span class="menu-icon">📂</span>
+                        <span class="menu-label">Load Game</span>
+                    </button>
+
+                    <button id="btn-leaderboard" class="menu-option-btn">
+                        <span class="menu-icon">🏆</span>
+                        <span class="menu-label">Leaderboard</span>
+                    </button>
+
+                    <button id="btn-reset" class="menu-option-btn">
+                        <span class="menu-icon">🔄</span>
+                        <span class="menu-label">Reset Game</span>
+                    </button>
+
+                    <div class="menu-setting">
+                        <label class="menu-toggle">
+                            <input type="checkbox" id="hard-mode">
+                            <span>⚡ Hard Mode</span>
+                        </label>
+                        <p class="menu-setting-description">4 rounds instead of 6</p>
+                    </div>
+                </div>
+
+                <button id="btn-close-menu" class="action-btn close-menu-btn">Close</button>
+            </div>
+        </div>
+
+        <!-- Shop Modal -->
+        <div class="modal hidden" id="shop-modal">
+            <div class="modal-content shop-content">
+                <h2>🏪 Equipment Shop</h2>
+                <p class="shop-subtitle">Improve your appearance to make better first impressions!</p>
+
+                <div class="shop-categories">
+                    <button class="category-btn active" data-category="all">All Items</button>
+                    <button class="category-btn" data-category="head">👒 Head</button>
+                    <button class="category-btn" data-category="body">👔 Body</button>
+                    <button class="category-btn" data-category="accessory">💍 Accessories</button>
+                </div>
+
+                <div class="shop-items" id="shop-items">
+                    <!-- Dynamically populated -->
+                </div>
+
+                <div class="shop-actions">
+                    <button id="btn-close-shop" class="action-btn">Close Shop</button>
+                </div>
             </div>
         </div>
 

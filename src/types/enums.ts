@@ -16,5 +16,12 @@ export enum ItemCategory {
     WEAPON = 'weapon',
     TECH = 'tech',
     ARTIFACT = 'artifact',
-    CONSUMABLE = 'consumable'
+    CONSUMABLE = 'consumable',
+    WEARABLE = 'wearable'
+}
+
+export enum WearableSlot {
+    HEAD = 'head',
+    BODY = 'body',
+    ACCESSORY = 'accessory'
 }

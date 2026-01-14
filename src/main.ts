@@ -2,6 +2,7 @@
 
 import './styles/main.css';
 import { Game } from '@game/Game';
+import { SaveManager } from '@/utils/SaveManager';
 
 let game: Game;
 
@@ -10,6 +11,22 @@ let game: Game;
  */
 async function initGame(): Promise<void> {
     game = new Game();
+
+    // Check for saved game
+    if (SaveManager.hasSavedGame() && !localStorage.getItem('hmr_player_balance')) {
+        const saveInfo = SaveManager.getSaveInfo();
+        if (saveInfo) {
+            const loadSave = confirm(
+                `Found saved game!\n\nProfit: ${saveInfo.profit} coins\nScore: ${saveInfo.score}\n\nLoad this save?`
+            );
+
+            if (loadSave) {
+                await game.loadGame();
+                console.log('✅ Game loaded from save');
+                return;
+            }
+        }
+    }
 
     // Initialize player and merchant (async for Claude generation)
     await game.initializeGame();

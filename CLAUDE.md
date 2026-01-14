@@ -6,6 +6,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Stellar Bargains** - A sci-fi trading game where all merchant behavior is powered by Claude AI. The AI generates unique merchant personalities and makes real-time negotiation decisions (accept/counter/reject) based on mood, trust, offer history, and game context.
 
+**Features:**
+- **Free-form text negotiation**: Players write messages to merchants (not just prices)
+- **Score system**: Tracks player progression based on profit, deals, and efficiency
+- **Save/Load**: Persistent game state with auto-save after each deal
+- **Local Leaderboard**: Top 10 high scores stored in localStorage
+
 ## Development Commands
 
 ```bash
@@ -34,7 +40,7 @@ This game has a unique architecture where **Claude AI makes all negotiation deci
 **Three main AI operations:**
 1. **Merchant Personality Generation** ([src/integrations/claude.ts:103-140](src/integrations/claude.ts#L103-L140)): Creates unique merchants with backstory, quirks, catchphrases, and negotiation parameters
 2. **Player Character Generation** ([src/integrations/claude.ts:145-181](src/integrations/claude.ts#L145-L181)): Creates unique player characters with species, profession, backstory, and trading style
-3. **Negotiation Processing** ([src/integrations/claude.ts:186-254](src/integrations/claude.ts#L186-L254)): AI evaluates player offers and decides action + mood/trust changes
+3. **Negotiation Processing** ([src/integrations/claude.ts:187-278](src/integrations/claude.ts#L187-L278)): AI evaluates player offers and decides action + mood/trust changes
 
 ### Claude API Security Architecture
 
@@ -52,7 +58,7 @@ This game has a unique architecture where **Claude AI makes all negotiation deci
 src/
 ├── main.ts                 # Entry point, HMR support, exposes window.__game in dev
 ├── game/
-│   └── Game.ts            # Orchestrates negotiation flow, state management
+│   └── Game.ts            # Orchestrates negotiation flow, state management, stats tracking
 ├── integrations/
 │   └── claude.ts          # Claude API client (model: claude-sonnet-4-20250514)
 ├── models/
@@ -63,14 +69,18 @@ src/
 │   └── ItemGenerator.ts   # Random item generation from templates
 ├── ui/
 │   └── UIController.ts    # All DOM manipulation and event handling
+├── utils/
+│   ├── SaveManager.ts     # Game save/load and score calculation
+│   └── Leaderboard.ts     # Local high scores management
 ├── data/
-│   └── itemTemplates.ts   # 32 sci-fi items (weapons, tech, artifacts, consumables)
+│   ├── itemTemplates.ts   # 32 sci-fi items (weapons, tech, artifacts, consumables)
+│   └── wearableTemplates.ts  # 12 wearable items for equipment shop
 ├── styles/
 │   └── main.css           # All CSS styling with CSS variables
 └── types/
-    ├── enums.ts           # Rarity, Condition, ItemCategory
+    ├── enums.ts           # Rarity, Condition, ItemCategory, WearableSlot
     ├── types.ts           # NegotiationMode, NegotiationAction
-    ├── interfaces.ts      # All interfaces (NegotiationContext, ClaudeNegotiationResponse, etc.)
+    ├── interfaces.ts      # All interfaces (NegotiationContext, ClaudeNegotiationResponse, ItemTemplate with wearable fields, etc.)
     └── index.ts           # Barrel export
 ```
 
@@ -83,7 +93,10 @@ import { Game } from '@game/Game';
 import { Item } from '@models/Item';
 import { claudeIntegration } from '@integrations/claude';
 import { NegotiationContext } from '@types/interfaces';
+import { SaveManager } from '../utils/SaveManager'; // No @utils alias - use relative imports
 ```
+
+**Note**: The `@ai` alias still exists in configs but the `src/ai/` folder was removed (AI logic is now handled by Claude API). The `@utils` directory doesn't have an alias - use relative imports for SaveManager and Leaderboard.
 
 ### Key Architectural Patterns
 
@@ -105,8 +118,13 @@ import { NegotiationContext } from '@types/interfaces';
 - AI generates unique personality at game start/reset
 - Personality affects AI decision-making (target margin, patience, bluff sensitivity)
 - Merchant state (mood, trust) evolves through negotiations
-- Mood: -100 (angry) to +100 (happy) - affects acceptance threshold
-- Trust: 0 (suspicious) to 100 (trusting) - affects bluff tolerance
+- Mood: -100 (furious) to +100 (delighted) - HEAVILY affects acceptance threshold and decision-making
+  - AI analyzes tone deeply: compliments (+30 to +50), insults (-40 to -60), threats (-50 to -70)
+  - Good mood (60+) = accept offers within 15-25% of fair price
+  - Bad mood (below 20) = accept only near-perfect offers within 5-10%
+  - Mood can override price considerations - kind treatment beats better prices
+- Trust: 0 (suspicious) to 100 (trusting) - affects bluff tolerance and willingness to believe player
+- **Tone matters more than price**: A polite player with a borderline offer can succeed over a rude player with a better offer
 
 **4. Price Mechanics:**
 - Each item has a `fairPrice` (actual market value, hidden from player)
@@ -115,12 +133,43 @@ import { NegotiationContext } from '@types/interfaces';
 - Profit calculation: actual deal price vs fair price
 
 **5. Inventory System:**
-- Player starts with 2-3 random items generated at game start ([src/game/Game.ts:371-378](src/game/Game.ts#L371-L378))
+- Player starts with 2-3 random items generated at game start
 - Items can be purchased (added to inventory) or sold (removed from inventory)
 - Selling requires selecting an item from inventory first
-- New merchant is generated after each completed deal ([src/game/Game.ts:316-329](src/game/Game.ts#L316-L329))
+- New merchant is generated after each completed deal
 
-**6. TypeScript Strictness:**
+**5a. Equipment Shop & Wearables System:**
+- Separate shop (🏪 Visit Shop button) sells wearable items (hats, clothes, accessories)
+- Wearables have fixed prices (no negotiation) and provide mood bonuses
+- 12 unique wearable items across 3 slots: Head, Body, Accessory ([src/data/wearableTemplates.ts](src/data/wearableTemplates.ts))
+- Equipment bonuses range from +10 to +20 initial mood boost with merchants
+- Players can equip one item per slot (head/body/accessory) from inventory
+- Equipped items apply their mood bonus at the START of each negotiation (first impression)
+- Wearables can also be sold to merchants like regular items
+- Equipment UI shows "EQUIPPED" badge and mood bonus on items
+- Total equipped bonus visible when negotiation starts (logged to console)
+
+**6. Score System:**
+- Formula: `profit + (successful_deals × 50) + efficiency_bonus - (failed × 25)`
+- Efficiency bonus: awarded when average profit per deal > 100
+- Score calculation in [src/utils/SaveManager.ts:51-65](src/utils/SaveManager.ts#L51-L65) (`calculateScore()` method)
+- Displayed in header alongside balance and profit
+
+**7. Save/Load System:**
+- Auto-save after each successful deal
+- Saves player state, merchant state, stats, and settings
+- Stored in localStorage with key `stellar-bargains-save`
+- Load prompt on startup if save exists
+- Manual save/load buttons in game controls
+
+**8. Leaderboard:**
+- Top 10 high scores stored locally
+- Entries include: player name, score, profit, deals, timestamp
+- Persistent across sessions (localStorage)
+- Submit score button in leaderboard modal
+- Highlights new entry if it makes the board
+
+**9. TypeScript Strictness:**
 - All strict flags enabled ([tsconfig.json:7-18](tsconfig.json#L7-L18))
 - No implicit `any`
 - Full type safety enforced
@@ -147,7 +196,9 @@ The `.env` file is in `.gitignore` and must never be committed.
 **When modifying negotiation logic:**
 - Never bypass Claude AI - all decisions must go through `claudeIntegration.processNegotiation()`
 - Build complete `NegotiationContext` with all state (mood, trust, history, round pressure)
-- AI prompt engineering is in [src/integrations/claude.ts:194-235](src/integrations/claude.ts#L194-L235)
+- AI prompt engineering is in [src/integrations/claude.ts:195-310](src/integrations/claude.ts#L195-L310) (the main negotiation prompt)
+- **Mood system is emotion-driven**: AI deeply analyzes tone (compliments, insults, humor, threats) and reacts with large mood swings (-70 to +50)
+- **Mood heavily influences decisions**: Good mood = generous acceptance (20-25% tolerance), bad mood = strict requirements (5% tolerance)
 
 **When adding new features:**
 - Maintain separation: Game (logic) vs UIController (DOM)
@@ -176,7 +227,10 @@ Each item has rarity (Common/Uncommon/Rare/Epic), condition (Poor/Fair/Good/Exce
 1. **HMR State Persistence**: Player balance/profit persists across hot reloads via localStorage ([src/main.ts](src/main.ts))
 2. **API Proxy Dev-Only**: The Vite proxy in [vite.config.ts](vite.config.ts) only works with `npm run dev`. Production needs a real backend.
 3. **Strict Mode**: TypeScript will catch null/undefined issues - all properties must be properly typed
-4. **AI Response Parsing**: Claude sometimes wraps JSON in markdown code blocks - responses are cleaned before parsing ([src/integrations/claude.ts:131](src/integrations/claude.ts#L131), [line 244](src/integrations/claude.ts#L244))
+4. **AI Response Parsing**: Claude sometimes wraps JSON in markdown code blocks - responses are cleaned before parsing (see `cleanJson` pattern in [src/integrations/claude.ts:131](src/integrations/claude.ts#L131) and [line 268](src/integrations/claude.ts#L268))
 5. **Dev Debugging**: Game instance exposed as `window.__game` in dev mode for console debugging ([src/main.ts:60-68](src/main.ts#L60-L68))
 6. **Single-File Build**: Production build uses `vite-plugin-singlefile` to inline all assets into one HTML file - useful for distribution but the API proxy won't work without a backend
 7. **New Merchant After Deals**: A fresh merchant with unique personality is generated after each completed deal - this is intentional to provide variety
+8. **Save Data**: Game saves include full merchant personality (extended ClaudePersonality object) - make sure this is preserved when loading
+9. **Free-form Messages**: AI extracts prices from player messages - no strict format required, just natural text
+10. **Score Updates**: Score is recalculated after every deal (success or failure) using SaveManager.calculateScore()

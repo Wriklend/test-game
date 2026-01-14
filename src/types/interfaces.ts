@@ -1,6 +1,6 @@
 // ===== INTERFACES =====
 
-import type { ItemCategory } from './enums';
+import type { ItemCategory, WearableSlot } from './enums';
 import type { NegotiationAction, NegotiationMode } from './types';
 import type { Item } from '../models/Item';
 import type { Merchant } from '../models/Merchant';
@@ -11,6 +11,8 @@ export interface ItemTemplate {
     description: string;
     category: ItemCategory;
     basePrice: number;
+    slot?: WearableSlot;        // For wearable items
+    moodBonus?: number;         // Mood boost when equipped (for wearables)
 }
 
 export interface PersonalityTraits {
@@ -72,6 +74,11 @@ export interface IGame {
     submitOffer(message: string): Promise<void>;
     reset(): Promise<void>;
     generateNewMerchant(): Promise<void>;
+    saveGame(): void;
+    loadGame(): Promise<boolean>;
+    submitToLeaderboard(playerName: string): number | null;
+    qualifiesForLeaderboard(): boolean;
+    openShop(): void;
     merchant: Merchant;
     player: Player;
     currentItem: Item | null;

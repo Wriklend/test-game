@@ -5,11 +5,15 @@ import { Merchant } from '../models/Merchant';
 import { Player } from '../models/Player';
 import { PersonalityProfile } from '../models/PersonalityProfile';
 import { ItemGenerator } from '../models/ItemGenerator';
+import { Item } from '../models/Item';
 import { UIController } from '../ui/UIController';
 import { claudeIntegration, type ClaudePersonality } from '../integrations/claude';
 import type { IGame, NegotiationContext, PersonalityTraits, ChatMessage } from '../types/interfaces';
-import type { Item } from '../models/Item';
 import type { NegotiationMode } from '../types/types';
+import { SaveManager, type GameStats } from '../utils/SaveManager';
+import { Leaderboard } from '../utils/Leaderboard';
+import { WEARABLE_TEMPLATES } from '../data/wearableTemplates';
+import { Rarity, Condition } from '../types/enums';
 
 /**
  * Game - main orchestrator
@@ -30,6 +34,14 @@ export class Game implements IGame {
     itemGenerator: ItemGenerator;
     ui: UIController;
     selectedInventoryIndex: number = -1;
+
+    // Stats tracking
+    stats: GameStats = {
+        totalDeals: 0,
+        successfulDeals: 0,
+        failedNegotiations: 0,
+        score: 0
+    };
 
     constructor() {
         this.player = new Player();
@@ -110,6 +122,15 @@ export class Game implements IGame {
         this.offerHistory = [];
         this.merchantCounterHistory = [];
         this.chatHistory = [];
+
+        // Apply mood bonus from equipped items (first impression bonus)
+        const equipmentBonus = this.player.getTotalMoodBonus();
+        if (equipmentBonus > 0) {
+            this.merchant.adjustMood(equipmentBonus);
+            console.log(`✨ Equipment bonus applied: +${equipmentBonus} mood (from ${this.player.getEquippedItems().size} equipped items)`);
+            // Update UI to show the new mood with bonus
+            this.ui.updateMerchantInfo(this.merchant);
+        }
 
         this.ui.displayItem(this.currentItem);
         this.ui.showNegotiationPanel(mode, 1, this.maxRounds);
@@ -284,6 +305,11 @@ export class Game implements IGame {
             this.selectedInventoryIndex = -1;
         }
 
+        // Update stats
+        this.stats.totalDeals++;
+        this.stats.successfulDeals++;
+        this.updateScore();
+
         // Mood bonus for successful deal
         this.merchant.adjustMood(20);
 
@@ -294,6 +320,7 @@ export class Game implements IGame {
 
         // Update UI
         this.ui.updatePlayerStats(this.player.balance, this.player.profit);
+        this.ui.updateScore(this.stats.score);
         this.ui.updateMoodIndicator(this.merchant.mood);
         this.ui.updateTrustIndicator(this.merchant.trust);
         this.refreshInventoryDisplay();
@@ -309,13 +336,22 @@ export class Game implements IGame {
         );
 
         this.endNegotiation(true);
+
+        // Auto-save after successful deal
+        this.autoSave();
     }
 
     endNegotiation(success: boolean): void {
         if (!success && this.currentItem) {
+            // Update stats for failed negotiation
+            this.stats.totalDeals++;
+            this.stats.failedNegotiations++;
+            this.updateScore();
+
             // Small mood penalty for failed negotiation
             this.merchant.adjustMood(-5);
             this.ui.updateMoodIndicator(this.merchant.mood);
+            this.ui.updateScore(this.stats.score);
 
             // Capture values before they're cleared
             const itemName = this.currentItem.name;
@@ -340,6 +376,155 @@ export class Game implements IGame {
     }
 
     /**
+     * Update score based on current stats
+     */
+    updateScore(): void {
+        this.stats.score = SaveManager.calculateScore(this.player.profit, this.stats);
+    }
+
+    /**
+     * Auto-save game state
+     */
+    autoSave(): void {
+        const saved = SaveManager.saveGame({
+            player: {
+                balance: this.player.balance,
+                profit: this.player.profit,
+                inventory: this.player.inventory.map(item => ({
+                    name: item.name,
+                    description: item.description,
+                    category: item.category,
+                    rarity: item.rarity,
+                    condition: item.condition,
+                    fairPrice: item.fairPrice,
+                    marketHint: item.marketHint
+                })),
+                personality: (this.player as any).personality
+            },
+            merchant: {
+                personality: (this.merchant.personality as any).extended,
+                mood: this.merchant.mood,
+                trust: this.merchant.trust
+            },
+            stats: this.stats,
+            settings: {
+                hardMode: this.hardMode
+            }
+        });
+
+        if (saved) {
+            this.ui.showSaveIndicator();
+        }
+    }
+
+    /**
+     * Manually save game
+     */
+    saveGame(): void {
+        this.autoSave();
+        this.ui.showMessage('Game saved successfully!', 'success');
+    }
+
+    /**
+     * Load game from save
+     */
+    async loadGame(): Promise<boolean> {
+        const save = SaveManager.loadGame();
+        if (!save) {
+            this.ui.showError('No saved game found!');
+            return false;
+        }
+
+        try {
+            this.ui.showLoader('Loading Game', 'Restoring your progress...');
+
+            // Restore player
+            this.player = new Player(save.player.personality);
+            this.player.balance = save.player.balance;
+            this.player.profit = save.player.profit;
+
+            // Restore inventory - recreate Item objects
+            this.player.inventory = save.player.inventory.map(itemData => {
+                // Create Item object directly without template
+                const item = Object.create(Item.prototype);
+                item.name = itemData.name;
+                item.description = itemData.description;
+                item.category = itemData.category;
+                item.rarity = itemData.rarity;
+                item.condition = itemData.condition;
+                item.fairPrice = itemData.fairPrice;
+                item.marketHint = itemData.marketHint;
+                return item as Item;
+            });
+
+            // Restore merchant
+            const traits: PersonalityTraits = {
+                name: save.merchant.personality.name,
+                targetMargin: save.merchant.personality.targetMargin,
+                patience: save.merchant.personality.patience,
+                concessionRate: save.merchant.personality.concessionRate,
+                bluffSensitivity: save.merchant.personality.bluffSensitivity,
+                moodVolatility: save.merchant.personality.moodVolatility
+            };
+            const profile = new PersonalityProfile(traits);
+            (profile as any).extended = save.merchant.personality;
+            this.merchant = new Merchant(profile);
+            this.merchant.mood = save.merchant.mood;
+            this.merchant.trust = save.merchant.trust;
+
+            // Restore stats
+            this.stats = save.stats;
+
+            // Restore settings
+            this.hardMode = save.settings.hardMode;
+            const hardModeElement = document.getElementById('hard-mode') as HTMLInputElement;
+            if (hardModeElement) {
+                hardModeElement.checked = this.hardMode;
+            }
+            this.maxRounds = this.hardMode ? 4 : 6;
+
+            // Update UI
+            this.ui.updatePlayerInfo(this.player);
+            this.ui.updateMerchantInfo(this.merchant);
+            this.ui.updatePlayerStats(this.player.balance, this.player.profit);
+            this.ui.updateScore(this.stats.score);
+            this.ui.updateMoodIndicator(this.merchant.mood);
+            this.ui.updateTrustIndicator(this.merchant.trust);
+            this.refreshInventoryDisplay();
+
+            this.ui.hideLoader();
+            this.ui.showMessage('Game loaded successfully!', 'success');
+            return true;
+        } catch (error) {
+            console.error('Failed to load game:', error);
+            this.ui.hideLoader();
+            this.ui.showError('Failed to load game. Starting fresh.');
+            return false;
+        }
+    }
+
+    /**
+     * Submit score to leaderboard
+     */
+    submitToLeaderboard(playerName: string): number | null {
+        const rank = Leaderboard.addEntry({
+            playerName,
+            score: this.stats.score,
+            profit: this.player.profit,
+            deals: this.stats.successfulDeals
+        });
+
+        return rank;
+    }
+
+    /**
+     * Check if current score qualifies for leaderboard
+     */
+    qualifiesForLeaderboard(): boolean {
+        return Leaderboard.wouldQualify(this.stats.score);
+    }
+
+    /**
      * Generate a new merchant after completing a deal
      * Called when user closes the deal summary modal
      */
@@ -356,6 +541,57 @@ export class Game implements IGame {
         } finally {
             this.ui.hideLoader();
         }
+    }
+
+    /**
+     * Open shop to buy wearable items
+     */
+    openShop(): void {
+        this.ui.showShop();
+        this.ui.displayShopItems(
+            WEARABLE_TEMPLATES,
+            this.player.balance,
+            (index: number) => this.purchaseItem(index)
+        );
+    }
+
+    /**
+     * Purchase item from shop
+     */
+    purchaseItem(index: number): void {
+        const template = WEARABLE_TEMPLATES[index];
+        if (!template) return;
+
+        // Check if player can afford
+        if (this.player.balance < template.basePrice) {
+            this.ui.showError('Not enough coins!');
+            return;
+        }
+
+        // Create item (wearables are always NEW condition, COMMON rarity for simplicity)
+        const item = new Item(template, Rarity.COMMON, Condition.NEW);
+
+        // Deduct cost
+        this.player.balance -= template.basePrice;
+
+        // Add to inventory
+        this.player.addItem(item);
+
+        // Update UI
+        this.ui.updatePlayerStats(this.player.balance, this.player.profit);
+        this.refreshInventoryDisplay();
+
+        // Show success message
+        this.ui.showMessage(`Purchased ${item.name} for ${template.basePrice} coins!`, 'success');
+
+        // Refresh shop display
+        this.ui.displayShopItems(
+            WEARABLE_TEMPLATES,
+            this.player.balance,
+            (i: number) => this.purchaseItem(i)
+        );
+
+        console.log(`✅ Purchased ${item.name} (+${item.moodBonus} mood bonus)`);
     }
 
     async reset(): Promise<void> {
@@ -412,10 +648,25 @@ export class Game implements IGame {
      */
     private refreshInventoryDisplay(): void {
         this.selectedInventoryIndex = -1;
-        this.ui.updateInventory(this.player.inventory, (index) => {
-            this.selectedInventoryIndex = index;
-            console.log(`Selected inventory item: ${this.player.inventory[index].name}`);
-        });
+        this.ui.updateInventory(
+            this.player.inventory,
+            (index) => {
+                this.selectedInventoryIndex = index;
+                console.log(`Selected inventory item: ${this.player.inventory[index].name}`);
+            },
+            (index) => {
+                // Toggle equip/unequip
+                const item = this.player.inventory[index];
+                if (item.isEquipped) {
+                    this.player.unequipItem(index);
+                    this.ui.showMessage(`Unequipped ${item.name}`, 'success');
+                } else {
+                    this.player.equipItem(index);
+                    this.ui.showMessage(`Equipped ${item.name} (+${item.moodBonus} first impression)`, 'success');
+                }
+                this.refreshInventoryDisplay();
+            }
+        );
     }
 
     /**

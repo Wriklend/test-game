@@ -3,6 +3,7 @@
 
 import type { ClaudePlayerPersonality } from '../integrations/claude';
 import type { Item } from './Item';
+import { WearableSlot } from '../types/enums';
 
 export class Player {
     name: string;
@@ -83,5 +84,67 @@ export class Player {
      */
     hasItems(): boolean {
         return this.inventory.length > 0;
+    }
+
+    /**
+     * Equip an item from inventory
+     */
+    equipItem(index: number): boolean {
+        const item = this.inventory[index];
+        if (!item || !item.slot) {
+            return false; // Not a wearable item
+        }
+
+        // Unequip any item in the same slot
+        this.inventory.forEach(invItem => {
+            if (invItem.slot === item.slot && invItem.isEquipped) {
+                invItem.isEquipped = false;
+            }
+        });
+
+        // Equip the new item
+        item.isEquipped = true;
+        return true;
+    }
+
+    /**
+     * Unequip an item
+     */
+    unequipItem(index: number): boolean {
+        const item = this.inventory[index];
+        if (!item || !item.isEquipped) {
+            return false;
+        }
+        item.isEquipped = false;
+        return true;
+    }
+
+    /**
+     * Get total mood bonus from equipped items
+     */
+    getTotalMoodBonus(): number {
+        return this.inventory
+            .filter(item => item.isEquipped && item.moodBonus)
+            .reduce((total, item) => total + (item.moodBonus || 0), 0);
+    }
+
+    /**
+     * Get equipped items by slot
+     */
+    getEquippedItems(): Map<WearableSlot, Item> {
+        const equipped = new Map<WearableSlot, Item>();
+        this.inventory.forEach(item => {
+            if (item.isEquipped && item.slot) {
+                equipped.set(item.slot, item);
+            }
+        });
+        return equipped;
+    }
+
+    /**
+     * Get wearable items (for shop/equipment UI)
+     */
+    getWearableItems(): Item[] {
+        return this.inventory.filter(item => item.slot !== undefined);
     }
 }
