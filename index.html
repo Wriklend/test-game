@@ -128,11 +128,13 @@
 
                 <h3>🎮 How Negotiation Works</h3>
                 <ul>
+                    <li><strong>Write freely!</strong> You can type anything - prices, persuasion, threats, jokes, flattery. The AI reads and reacts to everything.</li>
                     <li><strong>BUY mode:</strong> You want to pay LESS than fair value. Start low, meet in the middle.</li>
                     <li><strong>SELL mode:</strong> You want to receive MORE than fair value. Start high, meet in the middle.</li>
                     <li>The merchant will COUNTER with prices that converge toward fair value</li>
                     <li>Each round, offers should get closer together until you reach a deal</li>
                     <li>You have 6 rounds (4 in Hard Mode) to close the deal</li>
+                    <li><strong>Tip:</strong> Use Ctrl+Enter (or Cmd+Enter) to send your message quickly!</li>
                 </ul>
 
                 <h3>🤖 Merchant Behavior</h3>
@@ -177,9 +179,9 @@
             </div>
 
             <div class="offer-input">
-                <label for="player-offer">Your Offer:</label>
-                <input type="number" id="player-offer" placeholder="Enter amount in coins" min="1">
-                <button id="btn-submit-offer" class="submit-btn">Submit Offer</button>
+                <label for="player-offer">Your Message:</label>
+                <textarea id="player-offer" placeholder="Write your message to the merchant... (e.g., 'I offer 350 coins' or 'How about 400? That's my best offer!')" rows="3"></textarea>
+                <button id="btn-submit-offer" class="submit-btn">Send Message</button>
             </div>
 
             <div class="negotiation-log" id="negotiation-log">

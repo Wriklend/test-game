@@ -462,16 +462,18 @@
         .offer-input {
             display: flex;
             gap: 15px;
-            align-items: center;
+            align-items: flex-start;
             margin-bottom: 20px;
         }
 
         .offer-input label {
             font-weight: 600;
             white-space: nowrap;
+            margin-top: 12px;
         }
 
-        .offer-input input {
+        .offer-input input,
+        .offer-input textarea {
             flex: 1;
             padding: 12px;
             border-radius: 8px;
@@ -479,6 +481,21 @@
             background: rgba(0, 0, 0, 0.3);
             color: var(--text-light);
             font-size: 1rem;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .offer-input textarea:focus,
+        .offer-input input:focus {
+            outline: none;
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 10px rgba(0, 204, 255, 0.3);
+        }
+
+        .offer-input textarea::placeholder {
+            color: var(--text-muted);
+            opacity: 0.6;
         }
 
         .submit-btn {
@@ -873,5 +890,10 @@
 
             .offer-input {
                 flex-direction: column;
+                align-items: stretch;
+            }
+
+            .offer-input label {
+                margin-top: 0;
             }
         }

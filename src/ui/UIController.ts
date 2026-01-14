@@ -38,19 +38,20 @@ export class UIController {
             this.game!.startNegotiation('SELL');
         });
 
-        // Submit offer
+        // Submit message
         document.getElementById('btn-submit-offer')!.addEventListener('click', () => {
-            const input = document.getElementById('player-offer') as HTMLInputElement;
-            const offer = parseInt(input.value);
-            if (!isNaN(offer) && offer > 0) {
-                this.game!.submitOffer(offer);
-                input.value = '';
+            const input = document.getElementById('player-offer') as HTMLTextAreaElement;
+            const message = input.value.trim();
+            if (message.length > 0) {
+                this.game!.submitOffer(message);
+                // Input is cleared in Game.ts after successful submission
             }
         });
 
-        // Enter key to submit
-        document.getElementById('player-offer')!.addEventListener('keypress', (e: KeyboardEvent) => {
-            if (e.key === 'Enter') {
+        // Ctrl/Cmd+Enter to submit (Enter alone creates new line in textarea)
+        document.getElementById('player-offer')!.addEventListener('keydown', (e: KeyboardEvent) => {
+            if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                e.preventDefault();
                 document.getElementById('btn-submit-offer')!.click();
             }
         });

@@ -182,6 +182,7 @@ Be creative! Make them memorable and unique. The character should feel like a pr
 
     /**
      * Process negotiation - AI makes ALL decisions
+     * Now supports free-form text messages from player
      */
     async processNegotiation(context: NegotiationContext): Promise<ClaudeNegotiationResponse> {
         console.log('🤖 AI processing negotiation...');
@@ -208,50 +209,56 @@ ${fairPriceInfo}
 
 NEGOTIATION CONTEXT:
 - Round ${context.negotiation.currentRound} of ${context.negotiation.maxRounds}
-- Player's previous offers: ${context.negotiation.offerHistory.length > 0 ? context.negotiation.offerHistory.join(', ') : 'none'}
+- Player's previous price offers: ${context.negotiation.offerHistory.length > 0 ? context.negotiation.offerHistory.join(', ') : 'none'}
 - YOUR previous counter-offers: ${context.negotiation.merchantCounterHistory.length > 0 ? context.negotiation.merchantCounterHistory.join(', ') : 'none'}
-- Player's current offer: ${context.playerOffer} coins
 
 CONVERSATION SO FAR:
 ${context.negotiation.chatHistory.map(msg => `${msg.speaker === 'merchant' ? 'You' : 'Player'}: "${msg.message}"`).join('\n')}
 
-RULES:
-1. ACCEPT if offer is within ~10-15% of fair price (or better for you)
-2. COUNTER with a price that moves TOWARD the fair price
-3. REJECT only if: offer is insulting (<50% or >200% of fair price), or you've completely lost patience
+PLAYER'S CURRENT MESSAGE:
+"${context.playerMessage}"
+
+YOUR TASK:
+1. **Extract the price offer** from the player's message (if they mentioned one). Look for numbers followed by "coins", "credits", or just standalone numbers in context.
+2. **Understand the player's intent**: Are they being friendly? Aggressive? Trying to flatter you? Making a threat? Just stating a price?
+3. **React in character** based on:
+   - The price they offered (if any)
+   - Their tone and approach
+   - Your current mood and trust level
+   - The negotiation history
+4. **Respond naturally** - you're a living character, not a robot
+
+DECISION RULES:
+- **If no clear price** is mentioned: Ask them to make a concrete offer (or make a counter-offer yourself)
+- **If price is fair** (within 10-15% of ${context.item.fairPrice}): ACCEPT
+- **If price is reasonable but not ideal**: COUNTER with a price moving toward ${context.item.fairPrice}
+- **If price is insulting** (<50% or >200% of fair): React negatively, maybe REJECT if you're out of patience
 
 CRITICAL RULES (MUST FOLLOW):
-1. **MUST ACCEPT OWN PRICE**: If player offers EXACTLY a price you previously counter-offered, you MUST ACCEPT. You already agreed to that price!
+1. **MUST ACCEPT OWN PRICE**: If player offers EXACTLY a price you previously counter-offered, you MUST ACCEPT
 2. **NEVER REGRESS**:
-   - When SELLING (player is buying): your counter-offers must ONLY go DOWN over time (never increase)
-   - When BUYING (player is selling): your counter-offers must ONLY go UP over time (never decrease)
-   - If you offered 100 before, you cannot now demand 110
+   - When SELLING: your counters must ONLY go DOWN over time
+   - When BUYING: your counters must ONLY go UP over time
+3. **PERSONALITY MATTERS**: React to flattery, insults, humor based on your personality
+4. **MOOD AFFECTS DECISIONS**: Good mood = more generous, bad mood = stricter (but still negotiate)
 
 PRICE CONVERGENCE:
-- Your goal is to close deals near the fair price
-- When SELLING: start high, counter LOWER each round toward fair price
-- When BUYING: start low, counter HIGHER each round toward fair price
-- Each counter should be closer to fair price than your last counter
-- Your new counter must be BETTER for the player than your previous counter (or equal)
-
-IMPORTANT FACTORS:
-- If mood is low (<-30), you're tougher on margins but STILL negotiate
-- If trust is low (<40), require offers closer to fair price before accepting
-- Extreme first offers damage trust, but give player a chance to improve
-- You get more flexible as rounds progress - accept within 20% by round 4+
-- Final round: strongly consider accepting anything within 25% of fair price
+- Goal: close deals near fair price (${context.item.fairPrice} coins)
+- Each counter should move closer to fair price
+- Get more flexible in later rounds (round ${context.negotiation.currentRound}/${context.negotiation.maxRounds})
 
 Return ONLY valid JSON (no markdown, no code blocks):
 {
   "action": "ACCEPT" | "COUNTER" | "REJECT",
-  "counterOffer": number | null (only if action is COUNTER, your counter price),
-  "message": "string (your 1-2 sentence response to player, in character)",
-  "moodChange": number (-30 to +30, how this offer affects your mood),
-  "trustChange": number (-20 to +10, how this affects trust in player),
-  "reasoning": "string (brief explanation of your decision, for debugging)"
+  "counterOffer": number | null (only if action is COUNTER),
+  "message": "string (your natural response to the player, in character - 1-3 sentences)",
+  "moodChange": number (-30 to +30, how their message/offer affects your mood),
+  "trustChange": number (-20 to +10, how this affects trust),
+  "reasoning": "string (brief explanation for debugging)",
+  "extractedPrice": number | null (the price you extracted from their message, or null if none mentioned)
 }`;
 
-        const response = await this.callClaude(prompt, 512);
+        const response = await this.callClaude(prompt, 600);
         if (!response) {
             throw new Error('Failed to get AI response');
         }
@@ -261,7 +268,7 @@ Return ONLY valid JSON (no markdown, no code blocks):
             const cleanJson = response.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
             const result = JSON.parse(cleanJson) as ClaudeNegotiationResponse;
 
-            console.log('✓ AI decision:', result.action, result.reasoning);
+            console.log('✓ AI decision:', result.action, 'Extracted price:', result.extractedPrice, 'Reasoning:', result.reasoning);
             return result;
         } catch (error) {
             console.error('Failed to parse negotiation response:', error);

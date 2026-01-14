@@ -114,7 +114,13 @@ import { NegotiationContext } from '@types/interfaces';
 - AI knows the fair price and evaluates offers against it
 - Profit calculation: actual deal price vs fair price
 
-**5. TypeScript Strictness:**
+**5. Inventory System:**
+- Player starts with 2-3 random items generated at game start ([src/game/Game.ts:371-378](src/game/Game.ts#L371-L378))
+- Items can be purchased (added to inventory) or sold (removed from inventory)
+- Selling requires selecting an item from inventory first
+- New merchant is generated after each completed deal ([src/game/Game.ts:316-329](src/game/Game.ts#L316-L329))
+
+**6. TypeScript Strictness:**
 - All strict flags enabled ([tsconfig.json:7-18](tsconfig.json#L7-L18))
 - No implicit `any`
 - Full type safety enforced
@@ -153,6 +159,17 @@ The `.env` file is in `.gitignore` and must never be committed.
 - Run `npm run type-check` before committing
 - Test with `npm run dev` (HMR enabled, localStorage state persistence)
 - Each negotiation costs ~$0.01-0.02 in API calls
+- Personality generation takes 2-3 seconds - loading overlay manages UX during AI calls
+
+## Item Database
+
+The game includes **32 unique sci-fi items** across 4 categories in [src/data/itemTemplates.ts](src/data/itemTemplates.ts):
+- **Weapons** (8): Plasma Rifle, Neural Disruptor, Mono-Blade, Gravity Hammer, etc.
+- **Tech** (10): Quantum Processor, Holo-Projector, Neural Interface, Fusion Cell, etc.
+- **Artifacts** (7): Precursor Orb, Psionic Crystal, Time Shard, Void Stone, etc.
+- **Consumables** (7): Stim Pack, Ration Bar, Anti-Radiation Serum, Oxygen Canister, etc.
+
+Each item has rarity (Common/Uncommon/Rare/Epic), condition (Poor/Fair/Good/Excellent/Pristine), and generated fair prices.
 
 ## Common Gotchas
 
@@ -162,3 +179,4 @@ The `.env` file is in `.gitignore` and must never be committed.
 4. **AI Response Parsing**: Claude sometimes wraps JSON in markdown code blocks - responses are cleaned before parsing ([src/integrations/claude.ts:131](src/integrations/claude.ts#L131), [line 244](src/integrations/claude.ts#L244))
 5. **Dev Debugging**: Game instance exposed as `window.__game` in dev mode for console debugging ([src/main.ts:60-68](src/main.ts#L60-L68))
 6. **Single-File Build**: Production build uses `vite-plugin-singlefile` to inline all assets into one HTML file - useful for distribution but the API proxy won't work without a backend
+7. **New Merchant After Deals**: A fresh merchant with unique personality is generated after each completed deal - this is intentional to provide variety

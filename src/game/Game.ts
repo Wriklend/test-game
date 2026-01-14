@@ -127,19 +127,15 @@ export class Game implements IGame {
     }
 
     /**
-     * Submit player offer - processed by Claude AI
+     * Submit player message - processed by Claude AI
+     * Now accepts free-form text instead of just numbers
      */
-    async submitOffer(offer: number): Promise<void> {
+    async submitOffer(message: string): Promise<void> {
         if (!this.currentItem) return;
 
         // Validation
-        if (offer <= 0) {
-            this.ui.showError("Please enter a valid positive amount.");
-            return;
-        }
-
-        if (this.mode === 'BUY' && offer > this.player.balance) {
-            this.ui.showError("You don't have enough coins!");
+        if (!message || message.trim().length === 0) {
+            this.ui.showError("Please write a message to the merchant.");
             return;
         }
 
@@ -148,16 +144,19 @@ export class Game implements IGame {
             return;
         }
 
-        // Log player offer
-        const playerMessage = `I offer ${offer} coins.`;
-        this.chatHistory.push({ speaker: 'player', message: playerMessage });
-        this.ui.addNegotiationLog('player', playerMessage);
+        // Log player message
+        this.chatHistory.push({ speaker: 'player', message: message });
+        this.ui.addNegotiationLog('player', message);
 
         // Disable submit button during processing
         const submitBtn = document.getElementById('btn-submit-offer') as HTMLButtonElement;
+        const messageInput = document.getElementById('player-offer') as HTMLTextAreaElement;
         if (submitBtn) {
             submitBtn.disabled = true;
             submitBtn.textContent = '🤖 AI thinking...';
+        }
+        if (messageInput) {
+            messageInput.disabled = true;
         }
 
         try {
@@ -185,14 +184,31 @@ export class Game implements IGame {
                     merchantCounterHistory: [...this.merchantCounterHistory],
                     chatHistory: [...this.chatHistory]
                 },
-                playerOffer: offer
+                playerMessage: message
             };
 
             // Process with Claude AI
             const result = await claudeIntegration.processNegotiation(context);
 
-            // Update offer history
-            this.offerHistory.push(offer);
+            // Validate extracted price if player is buying and has insufficient funds
+            if (result.extractedPrice && result.extractedPrice > 0) {
+                if (this.mode === 'BUY' && result.extractedPrice > this.player.balance) {
+                    this.ui.showError("You don't have enough coins for that offer!");
+                    // Restore UI state
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = 'Send Message';
+                    }
+                    if (messageInput) {
+                        messageInput.disabled = false;
+                    }
+                    return;
+                }
+
+                // Update offer history with extracted price
+                this.offerHistory.push(result.extractedPrice);
+            }
+
             if (result.action === 'COUNTER' && result.counterOffer) {
                 this.merchantCounterHistory.push(result.counterOffer);
             }
@@ -213,12 +229,22 @@ export class Game implements IGame {
 
             // Handle result
             if (result.action === 'ACCEPT') {
-                this.completeDeal(offer);
+                // Use extracted price if available, otherwise use last offer
+                const finalPrice = result.extractedPrice || this.offerHistory[this.offerHistory.length - 1] || 0;
+                this.completeDeal(finalPrice);
             } else if (result.action === 'REJECT' || this.currentRound > this.maxRounds) {
                 this.endNegotiation(false);
             }
 
             console.log('🤖 AI reasoning:', result.reasoning);
+            if (result.extractedPrice) {
+                console.log('💰 Extracted price:', result.extractedPrice);
+            }
+
+            // Clear input field after successful submission
+            if (messageInput) {
+                messageInput.value = '';
+            }
 
         } catch (error) {
             console.error('AI processing failed:', error);
@@ -227,7 +253,11 @@ export class Game implements IGame {
             // Re-enable submit button
             if (submitBtn) {
                 submitBtn.disabled = false;
-                submitBtn.textContent = 'Submit Offer';
+                submitBtn.textContent = 'Send Message';
+            }
+            if (messageInput) {
+                messageInput.disabled = false;
+                messageInput.focus();
             }
         }
     }

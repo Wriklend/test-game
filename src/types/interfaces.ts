@@ -30,6 +30,7 @@ export interface ClaudeNegotiationResponse {
     moodChange: number;                  // -100 to +100
     trustChange: number;                 // -100 to +100
     reasoning: string;                   // AI's reasoning (for debugging)
+    extractedPrice?: number;             // Price extracted from player's message (if any)
 }
 
 // Chat message for negotiation history
@@ -57,18 +58,18 @@ export interface NegotiationContext {
     negotiation: {
         currentRound: number;
         maxRounds: number;
-        offerHistory: number[];          // All previous player offers
+        offerHistory: number[];          // All previous player offers (extracted prices)
         merchantCounterHistory: number[]; // All previous merchant counter-offers
         chatHistory: ChatMessage[];      // Full dialogue history
     };
-    playerOffer: number;                 // Current offer from player
+    playerMessage: string;               // Current message from player (free-form text)
 }
 
 // ===== GAME INTERFACE (for breaking circular dependency) =====
 
 export interface IGame {
     startNegotiation(mode: NegotiationMode): void;
-    submitOffer(offer: number): Promise<void>;
+    submitOffer(message: string): Promise<void>;
     reset(): Promise<void>;
     generateNewMerchant(): Promise<void>;
     merchant: Merchant;
