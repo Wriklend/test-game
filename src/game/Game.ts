@@ -23,11 +23,13 @@ export class Game implements IGame {
     currentRound: number = 0;
     maxRounds: number = 6;
     offerHistory: number[] = [];
+    merchantCounterHistory: number[] = [];
     chatHistory: ChatMessage[] = [];
     mode: NegotiationMode = 'BUY';
     hardMode: boolean = false;
     itemGenerator: ItemGenerator;
     ui: UIController;
+    selectedInventoryIndex: number = -1;
 
     constructor() {
         this.player = new Player();
@@ -65,6 +67,10 @@ export class Game implements IGame {
             this.merchant = await this.createMerchant();
             this.ui.updateMerchantInfo(this.merchant);
 
+            // Generate starting inventory (2-3 items)
+            this.generateStartingInventory();
+            this.refreshInventoryDisplay();
+
             console.log('✅ Game initialized with AI characters');
         } catch (error) {
             console.error('Failed to initialize game:', error);
@@ -81,15 +87,29 @@ export class Game implements IGame {
             return;
         }
 
+        // For SELL mode, check if player has items and one is selected
+        if (mode === 'SELL') {
+            if (!this.player.hasItems()) {
+                this.ui.showError('You have no items to sell! Buy something first.');
+                return;
+            }
+            if (this.selectedInventoryIndex < 0) {
+                this.ui.showError('Please select an item from your inventory to sell.');
+                return;
+            }
+            // Use selected item from inventory
+            this.currentItem = this.player.inventory[this.selectedInventoryIndex];
+        } else {
+            // BUY mode - generate random item from merchant
+            this.currentItem = this.itemGenerator.generateRandom();
+        }
+
         this.mode = mode;
-        this.currentItem = this.itemGenerator.generateRandom();
         this.currentRound = 1;
         this.maxRounds = this.hardMode ? 4 : 6;
         this.offerHistory = [];
+        this.merchantCounterHistory = [];
         this.chatHistory = [];
-
-        // Note: We don't check balance here - let player negotiate first
-        // Balance validation happens in submitOffer() when they actually commit
 
         this.ui.displayItem(this.currentItem);
         this.ui.showNegotiationPanel(mode, 1, this.maxRounds);
@@ -162,6 +182,7 @@ export class Game implements IGame {
                     currentRound: this.currentRound,
                     maxRounds: this.maxRounds,
                     offerHistory: [...this.offerHistory],
+                    merchantCounterHistory: [...this.merchantCounterHistory],
                     chatHistory: [...this.chatHistory]
                 },
                 playerOffer: offer
@@ -172,6 +193,9 @@ export class Game implements IGame {
 
             // Update offer history
             this.offerHistory.push(offer);
+            if (result.action === 'COUNTER' && result.counterOffer) {
+                this.merchantCounterHistory.push(result.counterOffer);
+            }
             this.currentRound++;
 
             // Apply mood and trust changes
@@ -220,6 +244,16 @@ export class Game implements IGame {
         this.player.balance += (this.mode === 'BUY' ? -finalPrice : finalPrice);
         this.player.profit += profit;
 
+        // Handle inventory
+        if (this.mode === 'BUY') {
+            // Add purchased item to inventory
+            this.player.addItem(this.currentItem);
+        } else {
+            // Remove sold item from inventory
+            this.player.removeItem(this.selectedInventoryIndex);
+            this.selectedInventoryIndex = -1;
+        }
+
         // Mood bonus for successful deal
         this.merchant.adjustMood(20);
 
@@ -232,6 +266,7 @@ export class Game implements IGame {
         this.ui.updatePlayerStats(this.player.balance, this.player.profit);
         this.ui.updateMoodIndicator(this.merchant.mood);
         this.ui.updateTrustIndicator(this.merchant.trust);
+        this.refreshInventoryDisplay();
 
         // Show summary
         this.ui.showDealSummary(
@@ -266,6 +301,7 @@ export class Game implements IGame {
         this.currentItem = null;
         this.currentRound = 0;
         this.offerHistory = [];
+        this.merchantCounterHistory = [];
         this.chatHistory = [];
 
         setTimeout(() => {
@@ -296,6 +332,8 @@ export class Game implements IGame {
         this.currentItem = null;
         this.currentRound = 0;
         this.offerHistory = [];
+        this.merchantCounterHistory = [];
+        this.chatHistory = [];
         const hardModeElement = document.getElementById('hard-mode') as HTMLInputElement;
         if (hardModeElement) {
             this.hardMode = hardModeElement.checked;
@@ -321,6 +359,33 @@ export class Game implements IGame {
         }
 
         this.ui.reset();
+
+        // Generate starting inventory for new player
+        this.generateStartingInventory();
+        this.refreshInventoryDisplay();
+    }
+
+    /**
+     * Generate starting inventory items (2-3 random items)
+     */
+    private generateStartingInventory(): void {
+        const numItems = 2 + Math.floor(Math.random() * 2); // 2-3 items
+        for (let i = 0; i < numItems; i++) {
+            const item = this.itemGenerator.generateRandom();
+            this.player.addItem(item);
+        }
+        console.log(`📦 Generated ${numItems} starting items`);
+    }
+
+    /**
+     * Refresh inventory display in UI
+     */
+    private refreshInventoryDisplay(): void {
+        this.selectedInventoryIndex = -1;
+        this.ui.updateInventory(this.player.inventory, (index) => {
+            this.selectedInventoryIndex = index;
+            console.log(`Selected inventory item: ${this.player.inventory[index].name}`);
+        });
     }
 
     /**

@@ -208,7 +208,8 @@ ${fairPriceInfo}
 
 NEGOTIATION CONTEXT:
 - Round ${context.negotiation.currentRound} of ${context.negotiation.maxRounds}
-- Previous offers: ${context.negotiation.offerHistory.length > 0 ? context.negotiation.offerHistory.join(', ') : 'none'}
+- Player's previous offers: ${context.negotiation.offerHistory.length > 0 ? context.negotiation.offerHistory.join(', ') : 'none'}
+- YOUR previous counter-offers: ${context.negotiation.merchantCounterHistory.length > 0 ? context.negotiation.merchantCounterHistory.join(', ') : 'none'}
 - Player's current offer: ${context.playerOffer} coins
 
 CONVERSATION SO FAR:
@@ -216,15 +217,22 @@ ${context.negotiation.chatHistory.map(msg => `${msg.speaker === 'merchant' ? 'Yo
 
 RULES:
 1. ACCEPT if offer is within ~10-15% of fair price (or better for you)
-2. COUNTER with a price that moves TOWARD the fair price - your counter should always be between the player's offer and your ideal price
+2. COUNTER with a price that moves TOWARD the fair price
 3. REJECT only if: offer is insulting (<50% or >200% of fair price), or you've completely lost patience
 
-PRICE CONVERGENCE (CRITICAL):
+CRITICAL RULES (MUST FOLLOW):
+1. **MUST ACCEPT OWN PRICE**: If player offers EXACTLY a price you previously counter-offered, you MUST ACCEPT. You already agreed to that price!
+2. **NEVER REGRESS**:
+   - When SELLING (player is buying): your counter-offers must ONLY go DOWN over time (never increase)
+   - When BUYING (player is selling): your counter-offers must ONLY go UP over time (never decrease)
+   - If you offered 100 before, you cannot now demand 110
+
+PRICE CONVERGENCE:
 - Your goal is to close deals near the fair price
-- When SELLING: start high, but counter LOWER each round toward fair price
-- When BUYING: start low, but counter HIGHER each round toward fair price
-- Each counter should be closer to fair price than your last position
-- NEVER counter away from the fair price - always converge toward it
+- When SELLING: start high, counter LOWER each round toward fair price
+- When BUYING: start low, counter HIGHER each round toward fair price
+- Each counter should be closer to fair price than your last counter
+- Your new counter must be BETTER for the player than your previous counter (or equal)
 
 IMPORTANT FACTORS:
 - If mood is low (<-30), you're tougher on margins but STILL negotiate

@@ -299,4 +299,78 @@ export class UIController {
         document.getElementById('player-weakness')!.textContent = `⚠️ ${player.weakness}`;
         this.updatePlayerStats(player.balance, player.profit);
     }
+
+    // ===== INVENTORY =====
+
+    updateInventory(inventory: Item[], onSelectItem?: (index: number) => void): void {
+        const grid = document.getElementById('inventory-grid')!;
+        const countEl = document.getElementById('inventory-count')!;
+        const emptyEl = document.getElementById('inventory-empty');
+
+        // Update count
+        countEl.textContent = `(${inventory.length} item${inventory.length !== 1 ? 's' : ''})`;
+
+        // Clear existing items (except empty message)
+        const existingItems = grid.querySelectorAll('.inventory-item');
+        existingItems.forEach(item => item.remove());
+
+        // Show/hide empty message
+        if (emptyEl) {
+            if (inventory.length === 0) {
+                emptyEl.classList.remove('hidden');
+            } else {
+                emptyEl.classList.add('hidden');
+            }
+        }
+
+        // Add inventory items
+        inventory.forEach((item, index) => {
+            const itemEl = document.createElement('div');
+            itemEl.className = 'inventory-item';
+            itemEl.dataset.index = index.toString();
+
+            itemEl.innerHTML = `
+                <div class="inventory-item-name">${item.name}</div>
+                <div class="inventory-item-badges">
+                    <span class="badge rarity-${item.rarity}">${item.rarity.toUpperCase()}</span>
+                    <span class="badge condition-${item.condition}">${item.condition.toUpperCase()}</span>
+                </div>
+                <div class="inventory-item-value">Est. ~<span>${item.marketHint}</span> coins</div>
+            `;
+
+            if (onSelectItem) {
+                itemEl.addEventListener('click', () => {
+                    // Remove selected from all
+                    grid.querySelectorAll('.inventory-item').forEach(el => el.classList.remove('selected'));
+                    // Add selected to this
+                    itemEl.classList.add('selected');
+                    onSelectItem(index);
+                });
+            }
+
+            grid.appendChild(itemEl);
+        });
+
+        // Update sell button state
+        this.updateSellButtonState(inventory.length > 0);
+    }
+
+    updateSellButtonState(hasItems: boolean): void {
+        const sellBtn = document.getElementById('btn-sell') as HTMLButtonElement;
+        if (sellBtn) {
+            sellBtn.disabled = !hasItems;
+            if (!hasItems) {
+                sellBtn.title = 'No items to sell - buy something first!';
+            } else {
+                sellBtn.title = '';
+            }
+        }
+    }
+
+    clearInventorySelection(): void {
+        const grid = document.getElementById('inventory-grid');
+        if (grid) {
+            grid.querySelectorAll('.inventory-item').forEach(el => el.classList.remove('selected'));
+        }
+    }
 }

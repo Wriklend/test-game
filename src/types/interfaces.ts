@@ -57,7 +57,8 @@ export interface NegotiationContext {
     negotiation: {
         currentRound: number;
         maxRounds: number;
-        offerHistory: number[];          // All previous offers (numbers only)
+        offerHistory: number[];          // All previous player offers
+        merchantCounterHistory: number[]; // All previous merchant counter-offers
         chatHistory: ChatMessage[];      // Full dialogue history
     };
     playerOffer: number;                 // Current offer from player
@@ -77,5 +78,6 @@ export interface IGame {
     maxRounds: number;
     mode: NegotiationMode;
     offerHistory: number[];
+    merchantCounterHistory: number[];
     chatHistory: ChatMessage[];
 }

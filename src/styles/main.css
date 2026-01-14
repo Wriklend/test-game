@@ -125,6 +125,89 @@
             border: 1px solid rgba(239, 68, 68, 0.4);
         }
 
+        /* ===== INVENTORY PANEL ===== */
+        .inventory-panel {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid var(--border-glow);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .inventory-panel h3 {
+            color: var(--accent-cyan);
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        .inventory-panel h3 span {
+            color: var(--text-muted);
+            font-weight: normal;
+            font-size: 0.9rem;
+        }
+
+        .inventory-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 12px;
+        }
+
+        .inventory-empty {
+            color: var(--text-muted);
+            font-style: italic;
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .inventory-item {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .inventory-item:hover {
+            border-color: var(--accent-cyan);
+            background: rgba(0, 217, 255, 0.1);
+        }
+
+        .inventory-item.selected {
+            border-color: var(--accent-purple);
+            background: rgba(168, 85, 247, 0.2);
+            box-shadow: 0 0 10px rgba(168, 85, 247, 0.3);
+        }
+
+        .inventory-item-name {
+            font-weight: 600;
+            color: var(--text-light);
+            margin-bottom: 6px;
+            font-size: 0.95rem;
+        }
+
+        .inventory-item-badges {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+
+        .inventory-item-badges .badge {
+            font-size: 0.65rem;
+            padding: 2px 8px;
+        }
+
+        .inventory-item-value {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .inventory-item-value span {
+            color: var(--accent-cyan);
+            font-weight: 600;
+        }
+
         /* ===== MERCHANT PANEL ===== */
         .merchant-panel {
             background: var(--bg-card);

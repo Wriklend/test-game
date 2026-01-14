@@ -2,6 +2,7 @@
 // AI-generated player character with personality and stats
 
 import type { ClaudePlayerPersonality } from '../integrations/claude';
+import type { Item } from './Item';
 
 export class Player {
     name: string;
@@ -15,6 +16,7 @@ export class Player {
     weakness: string;
     avatar: string;
     catchphrases: string[];
+    inventory: Item[];
 
     constructor(personality?: ClaudePlayerPersonality) {
         if (personality) {
@@ -42,6 +44,7 @@ export class Player {
             this.catchphrases = ['Let\'s make a deal.', 'Fair price for fair goods.'];
         }
         this.profit = 0;
+        this.inventory = [];
     }
 
     /**
@@ -56,5 +59,29 @@ export class Player {
      */
     getDisplayInfo(): string {
         return `${this.avatar} ${this.name} - ${this.species} ${this.profession}`;
+    }
+
+    /**
+     * Add item to inventory
+     */
+    addItem(item: Item): void {
+        this.inventory.push(item);
+    }
+
+    /**
+     * Remove item from inventory by index
+     */
+    removeItem(index: number): Item | null {
+        if (index >= 0 && index < this.inventory.length) {
+            return this.inventory.splice(index, 1)[0];
+        }
+        return null;
+    }
+
+    /**
+     * Check if inventory has items
+     */
+    hasItems(): boolean {
+        return this.inventory.length > 0;
     }
 }
