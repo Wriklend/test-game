@@ -32,6 +32,12 @@ export interface ClaudeNegotiationResponse {
     reasoning: string;                   // AI's reasoning (for debugging)
 }
 
+// Chat message for negotiation history
+export interface ChatMessage {
+    speaker: 'player' | 'merchant';
+    message: string;
+}
+
 // Context sent to Claude API for each offer
 export interface NegotiationContext {
     mode: NegotiationMode;               // BUY or SELL
@@ -51,7 +57,8 @@ export interface NegotiationContext {
     negotiation: {
         currentRound: number;
         maxRounds: number;
-        offerHistory: number[];          // All previous offers
+        offerHistory: number[];          // All previous offers (numbers only)
+        chatHistory: ChatMessage[];      // Full dialogue history
     };
     playerOffer: number;                 // Current offer from player
 }
@@ -70,4 +77,5 @@ export interface IGame {
     maxRounds: number;
     mode: NegotiationMode;
     offerHistory: number[];
+    chatHistory: ChatMessage[];
 }

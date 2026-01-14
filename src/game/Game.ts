@@ -7,7 +7,7 @@ import { PersonalityProfile } from '../models/PersonalityProfile';
 import { ItemGenerator } from '../models/ItemGenerator';
 import { UIController } from '../ui/UIController';
 import { claudeIntegration, type ClaudePersonality } from '../integrations/claude';
-import type { IGame, NegotiationContext, PersonalityTraits } from '../types/interfaces';
+import type { IGame, NegotiationContext, PersonalityTraits, ChatMessage } from '../types/interfaces';
 import type { Item } from '../models/Item';
 import type { NegotiationMode } from '../types/types';
 
@@ -23,6 +23,7 @@ export class Game implements IGame {
     currentRound: number = 0;
     maxRounds: number = 6;
     offerHistory: number[] = [];
+    chatHistory: ChatMessage[] = [];
     mode: NegotiationMode = 'BUY';
     hardMode: boolean = false;
     itemGenerator: ItemGenerator;
@@ -85,12 +86,10 @@ export class Game implements IGame {
         this.currentRound = 1;
         this.maxRounds = this.hardMode ? 4 : 6;
         this.offerHistory = [];
+        this.chatHistory = [];
 
-        // Check if player can afford (BUY mode)
-        if (mode === 'BUY' && this.currentItem.marketHint > this.player.balance) {
-            this.ui.showError("You don't have enough coins for this item! Try selling some items first.");
-            return;
-        }
+        // Note: We don't check balance here - let player negotiate first
+        // Balance validation happens in submitOffer() when they actually commit
 
         this.ui.displayItem(this.currentItem);
         this.ui.showNegotiationPanel(mode, 1, this.maxRounds);
@@ -102,10 +101,9 @@ export class Game implements IGame {
             "I'm listening. Make your pitch.",
             "Alright, let's negotiate."
         ];
-        this.ui.addNegotiationLog(
-            'merchant',
-            greetings[Math.floor(Math.random() * greetings.length)]
-        );
+        const greeting = greetings[Math.floor(Math.random() * greetings.length)];
+        this.chatHistory.push({ speaker: 'merchant', message: greeting });
+        this.ui.addNegotiationLog('merchant', greeting);
     }
 
     /**
@@ -131,7 +129,9 @@ export class Game implements IGame {
         }
 
         // Log player offer
-        this.ui.addNegotiationLog('player', `I offer ${offer} coins.`);
+        const playerMessage = `I offer ${offer} coins.`;
+        this.chatHistory.push({ speaker: 'player', message: playerMessage });
+        this.ui.addNegotiationLog('player', playerMessage);
 
         // Disable submit button during processing
         const submitBtn = document.getElementById('btn-submit-offer') as HTMLButtonElement;
@@ -161,7 +161,8 @@ export class Game implements IGame {
                 negotiation: {
                     currentRound: this.currentRound,
                     maxRounds: this.maxRounds,
-                    offerHistory: [...this.offerHistory]
+                    offerHistory: [...this.offerHistory],
+                    chatHistory: [...this.chatHistory]
                 },
                 playerOffer: offer
             };
@@ -178,6 +179,7 @@ export class Game implements IGame {
             this.merchant.adjustTrust(result.trustChange);
 
             // Log merchant response
+            this.chatHistory.push({ speaker: 'merchant', message: result.message });
             this.ui.addNegotiationLog('merchant', result.message);
 
             // Update UI
@@ -264,6 +266,7 @@ export class Game implements IGame {
         this.currentItem = null;
         this.currentRound = 0;
         this.offerHistory = [];
+        this.chatHistory = [];
 
         setTimeout(() => {
             this.ui.hideNegotiationPanel();

@@ -109,36 +109,38 @@
             <button class="toggle-tutorial" id="toggle-tutorial-btn">❓ How to Play</button>
             <div class="tutorial-content hidden" id="tutorial-content">
                 <h3>🎯 Objective</h3>
-                <p>Buy items below their fair value and sell items above their fair value to maximize profit. Manage the merchant's mood and build trust to get better deals!</p>
+                <p>Every item has a hidden <strong>fair value</strong>. Your goal: <strong>BUY below fair value</strong> or <strong>SELL above fair value</strong> to profit!</p>
 
-                <h3>🎮 How to Play</h3>
+                <h3>💰 Understanding Prices</h3>
                 <ul>
-                    <li>Choose <strong>BUY</strong> to purchase an item from the merchant, or <strong>SELL</strong> to sell to them</li>
-                    <li>Each negotiation has up to 6 rounds (4 in Hard Mode)</li>
-                    <li>Make offers and negotiate with the merchant</li>
-                    <li>The merchant will ACCEPT, COUNTER, or REJECT your offers</li>
+                    <li><strong>Fair Value:</strong> The true market price (hidden from you until deal closes)</li>
+                    <li><strong>Market Estimate:</strong> A rough hint (±15-30% off) - use it as a starting point, not gospel</li>
+                    <li><strong>Your Goal:</strong> Negotiate toward the fair value while getting a better deal than the merchant</li>
                 </ul>
 
-                <h3>🤖 AI Systems</h3>
+                <h3>🎮 How Negotiation Works</h3>
                 <ul>
-                    <li><strong>Mood (-100 to +100):</strong> Higher mood = more concessions and friendlier responses. Low mood may cause the merchant to walk away!</li>
-                    <li><strong>Trust (0 to 100):</strong> Bluffing with extreme or erratic offers lowers trust. Low trust makes the merchant more suspicious and aggressive.</li>
-                    <li><strong>Personalities:</strong> Each game features a different merchant type:
-                        <ul>
-                            <li><em>Greedy</em> - High profit margins, slow concessions</li>
-                            <li><em>Honest</em> - Fair prices, accepts reasonable offers</li>
-                            <li><em>Impulsive</em> - Quick concessions but low patience</li>
-                        </ul>
-                    </li>
+                    <li><strong>BUY mode:</strong> You want to pay LESS than fair value. Start low, meet in the middle.</li>
+                    <li><strong>SELL mode:</strong> You want to receive MORE than fair value. Start high, meet in the middle.</li>
+                    <li>The merchant will COUNTER with prices that converge toward fair value</li>
+                    <li>Each round, offers should get closer together until you reach a deal</li>
+                    <li>You have 6 rounds (4 in Hard Mode) to close the deal</li>
+                </ul>
+
+                <h3>🤖 Merchant Behavior</h3>
+                <ul>
+                    <li><strong>Mood (-100 to +100):</strong> Happy merchants make more concessions. Angry merchants may reject deals.</li>
+                    <li><strong>Trust (0-100):</strong> Low trust = stricter on prices. Build trust with fair offers.</li>
+                    <li>Extreme offers (too low/high) hurt mood and trust</li>
+                    <li>Each merchant has a unique AI-generated personality</li>
                 </ul>
 
                 <h3>💡 Strategy Tips</h3>
                 <ul>
-                    <li>Use the Market Estimate as a guide, but it's not always accurate</li>
-                    <li>Don't make extreme lowball offers - they damage trust</li>
-                    <li>Avoid wild price swings between offers</li>
-                    <li>Pay attention to the merchant's mood and adjust your strategy</li>
-                    <li>Build trust over multiple deals for better terms</li>
+                    <li>Start reasonable - offers within 50-150% of market estimate</li>
+                    <li>Move toward the middle each round - don't jump around</li>
+                    <li>Watch the merchant's counters - they hint at fair value</li>
+                    <li>Late rounds = more flexibility - push harder if needed</li>
                 </ul>
             </div>
         </section>

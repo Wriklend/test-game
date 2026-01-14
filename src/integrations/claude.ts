@@ -211,18 +211,27 @@ NEGOTIATION CONTEXT:
 - Previous offers: ${context.negotiation.offerHistory.length > 0 ? context.negotiation.offerHistory.join(', ') : 'none'}
 - Player's current offer: ${context.playerOffer} coins
 
+CONVERSATION SO FAR:
+${context.negotiation.chatHistory.map(msg => `${msg.speaker === 'merchant' ? 'You' : 'Player'}: "${msg.message}"`).join('\n')}
+
 RULES:
-1. ACCEPT if offer is acceptable (decent profit/price, or you're happy with it)
-2. COUNTER with a new price if you want to negotiate (move closer to agreement)
-3. REJECT if offer is insulting, you've run out of patience, or max rounds reached
+1. ACCEPT if offer is within ~10-15% of fair price (or better for you)
+2. COUNTER with a price that moves TOWARD the fair price - your counter should always be between the player's offer and your ideal price
+3. REJECT only if: offer is insulting (<50% or >200% of fair price), or you've completely lost patience
+
+PRICE CONVERGENCE (CRITICAL):
+- Your goal is to close deals near the fair price
+- When SELLING: start high, but counter LOWER each round toward fair price
+- When BUYING: start low, but counter HIGHER each round toward fair price
+- Each counter should be closer to fair price than your last position
+- NEVER counter away from the fair price - always converge toward it
 
 IMPORTANT FACTORS:
-- If mood is low (<-30), you're more likely to reject or be harsh
-- If trust is low (<40), you're suspicious of extreme offers
-- Extreme offers (>2x or <0.5x fair price) damage trust significantly
-- Wild price swings between offers are suspicious
-- You get more desperate as rounds progress (willing to concede more)
-- If max rounds is reached, you're forced to accept or walk away
+- If mood is low (<-30), you're tougher on margins but STILL negotiate
+- If trust is low (<40), require offers closer to fair price before accepting
+- Extreme first offers damage trust, but give player a chance to improve
+- You get more flexible as rounds progress - accept within 20% by round 4+
+- Final round: strongly consider accepting anything within 25% of fair price
 
 Return ONLY valid JSON (no markdown, no code blocks):
 {

@@ -18,7 +18,7 @@ npm run dev
 # Type check without building
 npm run type-check
 
-# Build for production
+# Build for production (runs type-check first, outputs single HTML file via vite-plugin-singlefile)
 npm run build
 
 # Preview production build
@@ -40,7 +40,7 @@ This game has a unique architecture where **Claude AI makes all negotiation deci
 
 **Development mode** (current setup):
 - API key stored in `.env` file (never committed)
-- Vite plugin middleware intercepts `/api/claude` requests ([vite.config.ts:34-80](vite.config.ts#L34-L80))
+- Vite plugin middleware intercepts `/api/claude` requests ([vite.config.ts:35-85](vite.config.ts#L35-L85))
 - Middleware adds API key server-side and forwards to Anthropic API via fetch
 - Browser never sees the API key
 
@@ -76,7 +76,7 @@ src/
 
 ### Path Aliases
 
-Configured in both [tsconfig.json:28-37](tsconfig.json#L28-L37) and [vite.config.ts:18-28](vite.config.ts#L18-L28):
+Configured in both [tsconfig.json:28-37](tsconfig.json#L28-L37) and [vite.config.ts:19-29](vite.config.ts#L19-L29):
 
 ```typescript
 import { Game } from '@game/Game';
@@ -123,6 +123,11 @@ import { NegotiationContext } from '@types/interfaces';
 ## Environment Setup
 
 **Required:** Create `.env` file with Claude API key:
+```bash
+cp .env.example .env
+# Edit .env and add your API key
+```
+
 ```env
 CLAUDE_API_KEY=sk-ant-your-api-key-here
 ```
@@ -155,4 +160,5 @@ The `.env` file is in `.gitignore` and must never be committed.
 2. **API Proxy Dev-Only**: The Vite proxy in [vite.config.ts](vite.config.ts) only works with `npm run dev`. Production needs a real backend.
 3. **Strict Mode**: TypeScript will catch null/undefined issues - all properties must be properly typed
 4. **AI Response Parsing**: Claude sometimes wraps JSON in markdown code blocks - responses are cleaned before parsing ([src/integrations/claude.ts:131](src/integrations/claude.ts#L131), [line 244](src/integrations/claude.ts#L244))
-5. **Dev Debugging**: Game instance exposed as `window.__game` in dev mode for console debugging ([src/main.ts:60-67](src/main.ts#L60-L67))
+5. **Dev Debugging**: Game instance exposed as `window.__game` in dev mode for console debugging ([src/main.ts:60-68](src/main.ts#L60-L68))
+6. **Single-File Build**: Production build uses `vite-plugin-singlefile` to inline all assets into one HTML file - useful for distribution but the API proxy won't work without a backend
